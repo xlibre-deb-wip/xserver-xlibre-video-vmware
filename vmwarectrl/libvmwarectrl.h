@@ -26,23 +26,22 @@
  */
 
 /*
- * vmwarectrl.h --
+ * libvmwarectrl.c --
  *
- *      The definitions used by the VMWARE_CTRL protocol extension that
- *      allows X clients to communicate with the driver.
+ *      The VMWARE_CTRL client library.
  */
 
 
-#ifndef _VMWARE_CTRL_H_
-#define _VMWARE_CTRL_H_
+#ifndef _LIB_VMWARE_CTRL_H_
+#define _LIB_VMWARE_CTRL_H_
 
-#define VMWARE_CTRL_PROTOCOL_NAME "VMWARE_CTRL"
+#include <X11/X.h>
+#include <X11/Xmd.h>
+#include <X11/extensions/panoramiXproto.h>
 
-#define VMWARE_CTRL_MAJOR_VERSION 0
-#define VMWARE_CTRL_MINOR_VERSION 2
+Bool VMwareCtrl_QueryExtension(Display *dpy, int *event_basep, int *error_basep);
+Bool VMwareCtrl_QueryVersion(Display *dpy, int *majorVersion, int *minorVersion);
+Bool VMwareCtrl_SetRes(Display *dpy, int screen, int x, int y);
+Bool VMwareCtrl_SetTopology(Display *dpy, int screen, xXineramaScreenInfo[], int number);
 
-#define X_VMwareCtrlQueryVersion 0
-#define X_VMwareCtrlSetRes 1
-#define X_VMwareCtrlSetTopology 2
-
-#endif /* _VMWARE_CTRL_H_ */
+#endif /* _LIB_VMWARE_CTRL_H_ */
