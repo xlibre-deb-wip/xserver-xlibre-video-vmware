@@ -1,9 +1,9 @@
 xserver-xorg-video-vmware (1:10.14.1-1) UNRELEASED; urgency=low
 
   * New upstream release
-  * Bump xserver ABI metadata to 1.1 for use with server 1.2
+  * Generate server dependencies automatically from the ABI
 
- -- David Nusinow <dnusinow@debian.org>  Wed, 14 Feb 2007 23:01:43 -0500
+ -- David Nusinow <dnusinow@debian.org>  Tue, 20 Feb 2007 22:27:34 -0500
 
 xserver-xorg-video-vmware (1:10.13.0-4) UNRELEASED; urgency=low
 
