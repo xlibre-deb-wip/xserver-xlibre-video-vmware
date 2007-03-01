@@ -1,9 +1,9 @@
-xserver-xorg-video-vmware (1:10.14.1-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:10.14.1-1) experimental; urgency=low
 
   * New upstream release
   * Generate server dependencies automatically from the ABI
 
- -- David Nusinow <dnusinow@debian.org>  Tue, 20 Feb 2007 22:27:34 -0500
+ -- David Nusinow <dnusinow@debian.org>  Wed, 21 Feb 2007 22:54:48 -0500
 
 xserver-xorg-video-vmware (1:10.13.0-4) UNRELEASED; urgency=low
 
