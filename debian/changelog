@@ -3,8 +3,9 @@ xserver-xorg-video-vmware (1:10.14.1-2) experimental; urgency=low
   * Add build-dep on x11proto-xinerama-dev to fix FTBFS, and bump build-dep on
     the server to >= 2:1.2.0-6 to get correct Provides (closes: #413104).
     Thanks, Frank Lichtenheld!
+  * Bump Standards-Version to 3.7.2 (no changes).
 
- -- Julien Cristau <jcristau@debian.org>  Fri,  2 Mar 2007 17:13:59 +0100
+ -- Julien Cristau <jcristau@debian.org>  Fri,  2 Mar 2007 23:20:38 +0100
 
 xserver-xorg-video-vmware (1:10.14.1-1) experimental; urgency=low
 
