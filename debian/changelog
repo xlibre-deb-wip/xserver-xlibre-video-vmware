@@ -1,18 +1,24 @@
+xserver-xorg-video-vmware (1:10.14.1-2) experimental; urgency=low
+
+  * Add build-dep on x11proto-xinerama-dev to fix FTBFS, and bump build-dep on
+    the server to >= 2:1.2.0-6 to get correct Provides (closes: #413104).
+    Thanks, Frank Lichtenheld!
+
+ -- Julien Cristau <jcristau@debian.org>  Fri,  2 Mar 2007 17:13:59 +0100
+
 xserver-xorg-video-vmware (1:10.14.1-1) experimental; urgency=low
 
+  [ David Nusinow ]
   * New upstream release
   * Generate server dependencies automatically from the ABI
 
- -- David Nusinow <dnusinow@debian.org>  Wed, 21 Feb 2007 22:54:48 -0500
-
-xserver-xorg-video-vmware (1:10.13.0-4) UNRELEASED; urgency=low
-
+  [ Julien Cristau ]
   * Add link to xserver-xorg-core bug script, so that bugreports contain
     the user's config and log files.
   * Bump dependency on xserver-xorg-core to >= 2:1.1.1-11, as previous
     versions don't have the bug script.
 
- -- Julien Cristau <julien.cristau@ens-lyon.org>  Tue,  7 Nov 2006 07:30:46 +0100
+ -- David Nusinow <dnusinow@debian.org>  Wed, 21 Feb 2007 22:54:48 -0500
 
 xserver-xorg-video-vmware (1:10.13.0-3) unstable; urgency=low
 
