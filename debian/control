@@ -10,7 +10,8 @@ Package: xserver-xorg-video-vmware
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, xserver-xorg-core (>= 2:1.1.1-11)
 Provides: xserver-xorg-video-1.0
-Replaces: xserver-xorg (<< 6.8.2-35)
+Replaces: xserver-xorg (<< 6.8.2-35), xserver-xorg-driver-vmware
+Conflicts: xserver-xorg-driver-vmware
 Description: X.Org X server -- VMware display driver
  This package provides the driver for VMware client sessions, i.e. if Linux
  is running inside a VMware session.
