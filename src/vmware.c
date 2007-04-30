@@ -37,6 +37,7 @@ char rcsId_vmware[] =
 #include "vmware.h"
 #include "guest_os.h"
 #include "vm_device_version.h"
+#include "svga_modes.h"
 
 #ifdef HaveDriverFuncs
 #define VMWARE_DRIVER_FUNC HaveDriverFuncs
@@ -81,8 +82,8 @@ char rcsId_vmware[] =
 #define VMWARE_NAME "VMWARE"
 #define VMWARE_DRIVER_NAME "vmware"
 #define VMWARE_MAJOR_VERSION	10
-#define VMWARE_MINOR_VERSION	14
-#define VMWARE_PATCHLEVEL	1
+#define VMWARE_MINOR_VERSION	15
+#define VMWARE_PATCHLEVEL	0
 #define VMWARE_DRIVER_VERSION \
    (VMWARE_MAJOR_VERSION * 65536 + VMWARE_MINOR_VERSION * 256 + VMWARE_PATCHLEVEL)
 
@@ -164,18 +165,31 @@ static XF86ModuleVersionInfo vmwareVersRec = {
 
 typedef enum {
     OPTION_HW_CURSOR,
-    OPTION_NOACCEL,
     OPTION_XINERAMA,
     OPTION_STATIC_XINERAMA
 } VMWAREOpts;
 
 static const OptionInfoRec VMWAREOptions[] = {
     { OPTION_HW_CURSOR, "HWcursor",     OPTV_BOOLEAN,   {0},    FALSE },
-    { OPTION_NOACCEL,   "NoAccel",      OPTV_BOOLEAN,   {0},    FALSE },
     { OPTION_XINERAMA,  "Xinerama",     OPTV_BOOLEAN,   {0},    FALSE },
     { OPTION_STATIC_XINERAMA, "StaticXinerama", OPTV_STRING, {0}, FALSE },
     { -1,               NULL,           OPTV_NONE,      {0},    FALSE }
 };
+
+/* Table of default modes to always add to the mode list. */
+
+typedef struct {
+   int width;
+   int height;
+} VMWAREDefaultMode;
+
+#define SVGA_DEFAULT_MODE(width, height) { width, height, },
+
+static const VMWAREDefaultMode VMWAREDefaultModes[] = {
+   SVGA_DEFAULT_MODES
+};
+
+#undef SVGA_DEFAULT_MODE
 
 static void VMWAREStopFIFO(ScrnInfoPtr pScrn);
 static void VMWARESave(ScrnInfoPtr pScrn);
@@ -278,23 +292,6 @@ vmwareSendSVGACmdUpdateFullScreen(VMWAREPtr pVMWARE)
     BB.x2 = pVMWARE->ModeReg.svga_reg_width;
     BB.y2 = pVMWARE->ModeReg.svga_reg_height;
     vmwareSendSVGACmdUpdate(pVMWARE, &BB);
-}
-
-static void
-vmwareSetPitchLock(VMWAREPtr pVMWARE, unsigned long fbPitch)
-{
-   CARD32 *vmwareFIFO = pVMWARE->vmwareFIFO;
-
-   VmwareLog(("Attempting to set pitchlock\n"));
-
-   if (pVMWARE->vmwareCapability & SVGA_CAP_PITCHLOCK) {
-      VmwareLog(("Using PitchLock register\n"));
-      vmwareWriteReg(pVMWARE, SVGA_REG_PITCHLOCK, fbPitch);
-   } else if (pVMWARE->hasPitchLockFIFOReg &&
-              vmwareFIFO[SVGA_FIFO_MIN] >= (vmwareReadReg(pVMWARE, SVGA_REG_MEM_REGS) << 2)) {
-      VmwareLog(("Using PitchLock FIFO register\n"));
-      vmwareFIFO[SVGA_FIFO_PITCHLOCK] = fbPitch;
-   }
 }
 
 static CARD32
@@ -863,12 +860,6 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     }
     xf86DrvMsg(pScrn->scrnIndex, from, "Using %s cursor\n",
                pVMWARE->hwCursor ? "HW" : "SW");
-    if (xf86IsOptionSet(options, OPTION_NOACCEL)) {
-        pVMWARE->noAccel = TRUE;
-        xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Acceleration disabled\n");
-    } else {
-        pVMWARE->noAccel = FALSE;
-    }
     pScrn->videoRam = pVMWARE->videoRam / 1024;
     pScrn->memPhysBase = pVMWARE->memPhysBase;
 
@@ -958,14 +949,6 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
             return FALSE;
         }
         xf86LoaderReqSymLists(ramdacSymbols, NULL);
-    }
-
-    if (!pVMWARE->noAccel) {
-        if (!xf86LoadSubModule(pScrn, "xaa")) {
-            VMWAREFreeRec(pScrn);
-            return FALSE;
-        }
-        xf86LoaderReqSymLists(vmwareXaaSymbols, NULL);
     }
 
     /* Initialise VMWARE_CTRL extension. */
@@ -1101,7 +1084,7 @@ VMWARERestore(ScrnInfoPtr pScrn)
 }
 
 static Bool
-VMWAREModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
+VMWAREModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool rebuildPixmap)
 {
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     vgaRegPtr vgaReg = &hwp->ModeReg;
@@ -1140,21 +1123,26 @@ VMWAREModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     VmwareLog(("fbSize:        %u\n", pVMWARE->FbSize));
     VmwareLog(("New dispWidth: %u\n", pScrn->displayWidth));
 
+    if (rebuildPixmap) {
+        pScrn->pScreen->ModifyPixmapHeader((*pScrn->pScreen->GetScreenPixmap)(pScrn->pScreen),
+                                           pScrn->pScreen->width,
+                                           pScrn->pScreen->height,
+                                           pScrn->pScreen->rootDepth,
+                                           pScrn->bitsPerPixel,
+                                           PixmapBytePad(pScrn->displayWidth,
+                                                         pScrn->pScreen->rootDepth),
+                                           (pointer)(pVMWARE->FbBase + pScrn->fbOffset));
+
+        (*pScrn->EnableDisableFBAccess)(pScrn->pScreen->myNum, FALSE);
+        (*pScrn->EnableDisableFBAccess)(pScrn->pScreen->myNum, TRUE);
+    }
+
     vgaHWProtect(pScrn, FALSE);
 
     /*
      * XXX -- If we want to check that we got the mode we asked for, this
      * would be a good place.
      */
-
-    /*
-     * Let XAA know about the mode change.
-     */
-    if (!pVMWARE->noAccel) {
-        if (!vmwareXAAModeInit(pScrn, mode)) {
-            return FALSE;
-        }
-    }
 
     /*
      * Update Xinerama info appropriately.
@@ -1218,9 +1206,6 @@ VMWAREInitFIFO(ScrnInfoPtr pScrn)
     vmwareFIFO[SVGA_FIFO_NEXT_CMD] = min * sizeof(CARD32);
     vmwareFIFO[SVGA_FIFO_STOP] = min * sizeof(CARD32);
     vmwareWriteReg(pVMWARE, SVGA_REG_CONFIG_DONE, 1);
-
-    pVMWARE->hasPitchLockFIFOReg =
-        extendedFifo && (vmwareFIFO[SVGA_FIFO_CAPABILITIES] & SVGA_FIFO_CAP_PITCHLOCK);
 }
 
 static void
@@ -1247,12 +1232,6 @@ VMWARECloseScreen(int scrnIndex, ScreenPtr pScreen)
         if (pVMWARE->CursorInfoRec) {
             vmwareCursorCloseScreen(pScreen);
         }
-
-        if (pVMWARE->xaaInfo) {
-            vmwareXAACloseScreen(pScreen);
-        }
-
-        vmwareSetPitchLock(pVMWARE, 0);
 
         VMWARERestore(pScrn);
         VMWAREUnmapMem(pScrn);
@@ -1450,9 +1429,7 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     VMWAREInitFIFO(pScrn);
 
     /* Initialise the first mode */
-    VMWAREModeInit(pScrn, pScrn->currentMode);
-
-    vmwareSetPitchLock(pVMWARE, pVMWARE->fbPitch);
+    VMWAREModeInit(pScrn, pScrn->currentMode, FALSE);
 
     /* Set the viewport if supported */
     VMWAREAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
@@ -1560,17 +1537,6 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     }
 
     /*
-     * Initialize acceleration.
-     */
-    if (!pVMWARE->noAccel) {
-        if (!vmwareXAAScreenInit(pScreen)) {
-            xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                       "XAA initialization failed -- running unaccelerated!\n");
-            pVMWARE->noAccel = TRUE;
-        }
-    }
-
-    /*
      * If backing store is to be supported (as is usually the case),
      * initialise it.
      */
@@ -1610,10 +1576,27 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     }
 
     /*
-     * The initial mode that fixes the framebuffer is the current mode
-     * at ScreenInit time.
+     * We explictly add a set of default modes because the X server will
+     * not include modes larger than the initial one.
      */
-    pVMWARE->initialMode = pScrn->currentMode;
+   {
+      unsigned int i;
+      unsigned int numModes = sizeof (VMWAREDefaultModes) / sizeof *(VMWAREDefaultModes);
+      char name[10];
+      for (i = 0; i < numModes; i++) {
+         const VMWAREDefaultMode *mode = &VMWAREDefaultModes[i];
+
+         /* Only modes that fit the hardware maximums should be added. */
+         if (mode->width <= pVMWARE->maxWidth && mode->height <= pVMWARE->maxHeight) {
+            snprintf(name, 10, "%dx%d", mode->width, mode->height);
+            VMWAREAddDisplayMode(pScrn, name, mode->width, mode->height);
+         }
+      }
+
+      /* Add the hardware maximums as a mode. */
+      snprintf(name, 10, "%dx%d", pVMWARE->maxWidth, pVMWARE->maxHeight);
+      VMWAREAddDisplayMode(pScrn, name, pVMWARE->maxWidth, pVMWARE->maxHeight);
+   }
 
     /*
      * We will lazily add the dynamic modes as the are needed when new
@@ -1638,7 +1621,7 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 static Bool
 VMWARESwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 {
-    return VMWAREModeInit(xf86Screens[scrnIndex], mode);
+    return VMWAREModeInit(xf86Screens[scrnIndex], mode, TRUE);
 }
 
 static Bool
@@ -1651,9 +1634,7 @@ VMWAREEnterVT(int scrnIndex, int flags)
         VMWAREInitFIFO(pScrn);
     }
 
-    vmwareSetPitchLock(pVMWARE, pVMWARE->fbPitch);
-
-    return VMWAREModeInit(pScrn, pScrn->currentMode);
+    return VMWAREModeInit(pScrn, pScrn->currentMode, TRUE);
 }
 
 static void
@@ -1661,8 +1642,6 @@ VMWARELeaveVT(int scrnIndex, int flags)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
-
-    vmwareSetPitchLock(pVMWARE, 0);
 
     VMWARERestore(pScrn);
 }
@@ -1776,7 +1755,7 @@ vmwareSetup(pointer module, pointer opts, int *errmaj, int *errmin)
         xf86AddDriver(&VMWARE, module, VMWARE_DRIVER_FUNC);
 
         LoaderRefSymLists(vgahwSymbols, fbSymbols, ramdacSymbols,
-                          shadowfbSymbols, vmwareXaaSymbols, NULL);
+                          shadowfbSymbols, NULL);
 
         return (pointer)1;
     }
