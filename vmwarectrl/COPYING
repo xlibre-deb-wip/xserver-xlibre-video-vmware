@@ -24,25 +24,3 @@
  * the sale, use or other dealings in this Software without prior written
  * authorization from the copyright holder(s) and author(s).
  */
-
-/*
- * vmwarectrl.h --
- *
- *      The definitions used by the VMWARE_CTRL protocol extension that
- *      allows X clients to communicate with the driver.
- */
-
-
-#ifndef _VMWARE_CTRL_H_
-#define _VMWARE_CTRL_H_
-
-#define VMWARE_CTRL_PROTOCOL_NAME "VMWARE_CTRL"
-
-#define VMWARE_CTRL_MAJOR_VERSION 0
-#define VMWARE_CTRL_MINOR_VERSION 2
-
-#define X_VMwareCtrlQueryVersion 0
-#define X_VMwareCtrlSetRes 1
-#define X_VMwareCtrlSetTopology 2
-
-#endif /* _VMWARE_CTRL_H_ */
