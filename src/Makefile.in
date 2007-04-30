@@ -75,9 +75,8 @@ am__installdirs = "$(DESTDIR)$(vmware_drv_ladir)"
 vmware_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(vmware_drv_la_LTLIBRARIES)
 vmware_drv_la_LIBADD =
-am_vmware_drv_la_OBJECTS = bits2pixels.lo offscreen_manager.lo \
-	vmware.lo vmwarecurs.lo vmwarexaa.lo vmwarectrl.lo \
-	vmwarexinerama.lo
+am_vmware_drv_la_OBJECTS = bits2pixels.lo vmware.lo vmwarecurs.lo \
+	vmwarectrl.lo vmwarexinerama.lo
 vmware_drv_la_OBJECTS = $(am_vmware_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -231,9 +230,8 @@ vmware_drv_la_SOURCES = \
          bits2pixels.h \
          guest_os.h \
          includeCheck.h \
-         offscreen_manager.c \
-         offscreen_manager.h \
          svga_limits.h \
+         svga_modes.h \
          svga_reg.h \
          svga_struct.h \
          vm_basic_types.h \
@@ -241,7 +239,6 @@ vmware_drv_la_SOURCES = \
          vmware.c \
          vmwarecurs.c \
          vmware.h \
-         vmwarexaa.c \
          vmwarectrl.c \
          vmwarectrl.h \
          vmwarectrlproto.h \
@@ -317,11 +314,9 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bits2pixels.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/offscreen_manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmware.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwarectrl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwarecurs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwarexaa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwarexinerama.Plo@am__quote@
 
 .c.o:
