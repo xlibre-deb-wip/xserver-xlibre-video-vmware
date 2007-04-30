@@ -1,9 +1,11 @@
-xserver-xorg-video-vmware (1:10.14.1-3) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:10.15.0-1) UNRELEASED; urgency=low
 
   [ Timo Aaltonen ]
   * Replaces/Conflicts: xserver-xorg-driver-vmware.
 
   [ Brice Goglin ]
+  * New upstream release.
+    + Pull more upstream fixes up-to 0c76b95e7aeac034cc598ea6a407187f76466411
   * Install the upstream changelog.
   * Bump Build-Depends: xserver-xorg-dev to >= 2:1.2.99.902
     (needed to let xsfbs get access to serverminver).
