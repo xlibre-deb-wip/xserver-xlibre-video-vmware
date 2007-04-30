@@ -1,95 +1,488 @@
-2006-09-03  Philip langdale <plangdale@vmware.com>
+commit 0c76b95e7aeac034cc598ea6a407187f76466411
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Feb 9 15:06:17 2007 -0800
 
-	* src/vmware.c:
-	* src/vmware.h:
-	* src/vmwarectrl.c:
-	Fix https://bugs.freedesktop.org/show_bug.cgi?id=8094
-	Lazily allocate the dynamic modes used for pixel precise guest
-	resizing. They will not appear until they are neeed.
+    Add svga_modes.h to Makefile.am
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit a283c62c1db9e25ba11c6d72e4d00e0d911d64a2
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Feb 9 11:09:17 2007 -0800
 
-	* configure.ac:
-	* src/vmware.c:
-	* src/vmware.h:
-	Unlibcwrap.  Bump server version requirement.  Bump to 10.13.0.
+    Filter out default modes that are larger than the hardware
+    maxmimum size and add an explicit mode for the hardware
+    maximum.
 
-2006-02-06  Philip Langdale <plangdale@vmware.com>
+commit f4540555dc8c823dfec53dddeb82e2b7b0dbfe3d
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Feb 9 10:00:32 2007 -0800
 
-	* configure.ac: Bump version number.
-	* src/vmware.c
-	* src/vmware.h: (VMWAREScreenInit) Set up the additional
-	state required by the VMWARE_CTRL extension.
-	A src/vmwarectrl.c
-	A src/vmwarectrl.h
-	A src/vmwarectrlproto.h: Add implementation of the VMWARE_CTRL
-	extension.
+    Correct the incorrect 1080p resolution.
+    
+    Should be 1920x1080 and not 1900x1080. Whoops.
 
-	This change adds the VMWARE_CTRL extension which allows for
-	an X client to request an arbitrary resolution be made
-	available in the modeline list. The intent here is not to
-	replace XF86VidMode (which, if it would only work, would have
-	made VMWARE_CTRL unnecessary) so we are not providing an
-	Add/Remove functionality. Rather, a single command "SetRes"
-	is provided. This will update one of two special entries in
-	the modeline list with the requested resolution (assuming
-	it's possible given the fixed framebuffer restriction).
-	The client can then use RandR to find and switch to the
-	requested resolution. We need two entries because the
-	server gets confused when asked to switch to a new
-	mode that has the same position in the list as the old
-	mode.
-	
-	vmwarectrl.h and vmwarectrlproto.h follow the standard
-	pattern for extension headers and can be dropped into any
-	client side project that wishes to call the extension -
-	although it is probably of very limited use to non-VMware
-	clients.
+commit eca6e9f9458440feebd6598aee24f02a3fd7a75f
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Feb 8 18:22:16 2007 -0800
 
-2006-01-12  Philip Langdale  <plangdale@vmware.com>
+    Bump version to 10.15.0
+    
+    This release adds truely usable resizing support by
+    removing the restriction that the you cannot resize
+    larger than the initial mode.
 
-	* configure.ac: Bump version number.
-	* src/vmware.c: Implement the DriverFunc so that we
-	can adjust the guest 'physical' display size to keep
-	DPI constant. Setting the initial display size to
-	match the host continues to be an exercise for the user.
+commit 2ec8c25cc935a318bd07c0d1fba9960dfe8f38d4
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Feb 8 18:07:19 2007 -0800
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Fix a race condition when switching to a multihead fullscreen mode.
+    
+    Due to implemtation details on the host side, switching to a multihead
+    fullscreen mode means multiple mode changes along the way. However,
+    because rrSetScreenConfig returns before the mode change completes,
+    we can enter a race, where a subsequent SetDisplayTopology overrides
+    the current pending one, leading to a mode switch where the resolution
+    and topology are no longer consistent.
+    
+    So, we fix this by ignoring any attempts to set the pending topology if
+    one is already pending.
 
-	* configure.ac:
-	Update package version for X11R7 release.
+commit a8afe781e108773e4a575ecc3330a5aa83c1cbb9
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Feb 8 17:08:08 2007 -0800
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+        Add a bunch of useful modes to the mode list.
+    
+        The X server prunes modes above the initial mode and
+        the number of default modes varies with distro and
+        server version. As it's easy to do, let's add a bunch
+        of useful versions in the driver so that users don't
+        have to mess with their config files as often.
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+commit 520f570aa3869090eac3accf6a2b3886ab188590
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Feb 8 13:44:57 2007 -0800
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Update man page to remove mention of the NoAccel option which
+    no longer exists as we don't do any 'acceleration'.
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+commit af8c0596a224ba8436d55c5dd6063fff688c7ad1
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Feb 8 13:42:31 2007 -0800
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Remove XAA 'acceleration'.
+    
+    We have a lot of stale code to 'accelerate' certain operations
+    through XAA. However, in practice, this acceleration is
+    completely unhelpful because whenever we encounter an
+    unaccelerated action, we have to sync and flush the fifo
+    which kills any performance gain.
+    
+    As such, the virtual hardware doesn't even advertise these
+    acceleration capabilities anymore, so the code is completely
+    unusued.
+    
+    In addition, XAA is on the way out, so there's no point
+    leaving in dead code which will have to go in the fairly
+    near future.
+    
+    The one operation we can meaningfully accelerate is a
+    front-only fill and when we get around to implementing
+    that, we'll use EXA instead.
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+commit 3dc1ebc7c2c76f575b5150f1890ec13f8bd3e8a1
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Feb 8 10:33:14 2007 -0800
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Make resizing work once and for all.
+    
+    This change removes the limitation on resizing larger than the
+    initial size and removes the need for pitch-locking bu resizing
+    the screen pixmap. Now the only limit on the screen size is
+    the maximum width/height reported by the virtual hardware which
+    is configured on the host side.
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+commit 188c2b44f0f47093092414f9364a52cc2d5016ad
+Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
+Date:   Mon Dec 18 14:05:19 2006 -0500
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+    Revert "Convert callers of LookupWindow() to dixLookupWindow()."
+    
+    This reverts commit 1f298c24fe1dde35f0d77cc34518eb9c2b873fc5.
 
-	* configure.ac:
-	Only build dlloader modules by default.
+commit 1f298c24fe1dde35f0d77cc34518eb9c2b873fc5
+Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
+Date:   Fri Dec 15 17:41:52 2006 -0500
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Convert callers of LookupWindow() to dixLookupWindow().
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+commit 9d41384616c8f6d00b53a61634f73e728d86d615
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Dec 6 16:48:12 2006 -0800
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Explicitly initialise buffer to NULL for parsing xinerama topologies.
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+commit ac2a57ea7aea00c695495aa01c27402569a9514a
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Oct 31 19:17:39 2006 -0800
+
+    Update man page to document "StaticXinerama"
+
+commit 4dd038bd73208184344cae4f363c492c7e61524b
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Oct 31 19:12:29 2006 -0800
+
+    Bump version to 10.14.0
+
+commit 73945118a6b3cad60f4a1927b9394206d36e8281
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Oct 30 11:52:57 2006 -0800
+
+    Fix more warnings.
+
+commit e0dca2ff0b695b60830cf8f10a2c0585602a4d40
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Oct 30 10:53:18 2006 -0800
+
+    Fix some warnings noted when compiling the code against
+    older Xorg versions.
+
+commit f96d12047725becf0515cc4df8572ca4a3956309
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Oct 25 18:06:13 2006 -0700
+
+    Refactor static Xinerama parsing.
+
+commit 57b32570f84d06180be2c9d249174b04f02d9fca
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Oct 25 10:49:27 2006 -0700
+
+    Add support for a static Xinerama configuration to be specified
+    in xorg.conf. This static configuration will always be used and
+    any attempts to update it will be ignored.
+    
+    Note that all xinerama aware apps that I have seen will not
+    sanity check the xinerama extents against the screen size, so
+    if the screen doesn't properly enclose the xinerama extents,
+    expect your apps to punish you accordingly.
+
+commit c62a63b00f7c43e265079d31f1bf7ff447423056
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Oct 11 11:47:39 2006 -0700
+
+    Update .gitignore
+
+commit 9345f8146ae41f7d2269e6fea5e3cba385139960
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Oct 11 11:47:25 2006 -0700
+
+    Add vmwarectrl sample client.
+
+commit b35666fdd567d4cd92574aeecadb8e0d41b32d77
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Oct 11 11:36:22 2006 -0700
+
+    Add .gitignore files.
+
+commit 7631f4d8db2b83878bd886204aaa978dac9c47b5
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Oct 11 11:32:18 2006 -0700
+
+    Document the 'Xinerama' option and tweak the default to reflect
+    the capabilites of the underlying hardware.
+
+commit 79de175986817cac2fedb267cc9a04438b3694d4
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Oct 11 11:26:04 2006 -0700
+
+    Check for xinerama in configure.ac
+
+commit 34e7264e99ceab5e9e2e022ed9a56531845b0b17
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Oct 11 10:57:57 2006 -0700
+
+    Add xinerama support to the vmware video driver. (Better late than never).
+    
+    With this change, the VMWARE_CTRL extension is updated so that it can
+    receive topology updates at runtime. I will add some sample client code
+    separately.
+    
+    I also intend to add support for a static initial topology defined in
+    xorg.conf but I haven't got around to it yet due to hating to write
+    string parsing code.
+
+commit dd201e23cc50ded2f316dbfa5d265608b80d994d
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Wed Sep 20 11:40:54 2006 -0700
+
+    Add support for the upcoming PITCHLOCK register. The FIFO register
+    is deprecated but support is retained so the driver works with
+    Workstation 5.5 and friends.
+
+commit 0850feff708ded63c27dc938ca4b9b8fcbed122b
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Sun Sep 3 10:45:22 2006 -0700
+
+    Fix https://bugs.freedesktop.org/show_bug.cgi?id=8094
+    Lazily allocate the dynamic modes used for pixel precise guest
+    resizing. They will not appear until they are neeed.
+
+commit 86aeab28b806642946e59a98573c5b25840c35ed
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 21:57:24 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit fe6963e09a8197f5c11e8a828c8da4024601a466
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 21:55:49 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 10.13.0.
+
+commit ac83dff5d6a54b05e0377ceac2b133238293fa0e
+Author: philipl <philipl>
+Date:   Tue Feb 7 18:51:35 2006 +0000
+
+    Add VMWARE_CTRL extension.
+
+commit a49f1e65147dc1ab805c74951cb0915b1352e8a9
+Author: philipl <philipl>
+Date:   Tue Jan 17 00:40:43 2006 +0000
+
+    Use DriverFunc to adjust physical size to keep DPI constant.
+
+commit ff3f9dc930ff6bd2d6a73d56c70b0284a597cd62
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:04 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit aa1da8e57939081f15db04fa8c654f363f4e4cb7
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:56 2005 +0000
+
+    Stub COPYING files
+
+commit 835f8000fdbdd35a6bbc5eabf1252d4040a798da
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:21 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 32a969be355c0c948739b4f18e0caa83c78960cc
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:41 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 643a290d01553c9fefe9b4e268ae515d49cd1af9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:37 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 9d0f12ee6bf340765317214ffef2f70883025e9e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:12 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit e0a08567f46f73005589876d38e3f5ff7543557b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:30:06 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit c80ca69d0160b78e8d2bbeae01de52978f8e581f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:15 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 417099c602463ff364f70a938c4a2d2275d8a5b7
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:23 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 26a28492f738defa0445059c2dd6bb9cad89d0aa
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:21 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit 9ba2f5c58f6ffc9533f5d1852b6d7ba25fa4785a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:23 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 731860b1fea54f2ce54fbf02ab77d7c01f381f80
+Author: nolan <nolan>
+Date:   Thu Nov 3 04:26:00 2005 +0000
+
+    Fix a bug where the cursor disappears. Committed on behalf of Shelley Gong
+        (shelleygong@vmware.com).
+
+commit 623b3c8297fc0b0d05ce0d6684ef3ab57054b0eb
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:57 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 4f1ef5a0bf2172b9d38c6b1b5dd92ae8efe01f42
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:06 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 3abe1c93562dbc4bbebfd293f7e90972e90c9dcc
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:55 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit ba3716950db330db08960248827bbf9321d42d71
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:38 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit 18207a8cc41044538520dd9f0036e44d3fe26f94
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:09 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit bce0feda4d05bd8fd4db20476e117026a21f3906
+Author: nolan <nolan>
+Date:   Fri Sep 23 02:55:25 2005 +0000
+
+    Support for XRandR in the VMware driver. Committed on behalf of Phil
+        Langdale (plangdale@vmware.com)
+
+commit f06924363cd77770257db5aac6d4d3c6add89dfa
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:55 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 120d7d1c616d1e2e3c7ca0d1d119d1b0731491c6
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:46 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit cd14003e4bf878e464437143cf18d30803ace999
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 23:57:30 2005 +0000
+
+    Build system for vmware
+
+commit e5ab935718e3f6aea8edc5edef5c0bd78af0ba14
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:30:07 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit daa2be7a9adf977eb4b63bb601d4b8b0b2881903
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:21 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit ae1ba62c3937e6d1067f850d3aeb0b11d316fb86
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:17:00 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 57d09f92c656203958bbc2040f255040f7d051ca
+Author: nolan <nolan>
+Date:   Fri Feb 18 23:15:59 2005 +0000
+
+    updated copyright string in man page of VMware SVGA driver.
+
+commit b4379cd6f99c14a2feaabce4560f6dfd62543c62
+Author: nolan <nolan>
+Date:   Thu Sep 30 21:44:35 2004 +0000
+
+    Bugfix for Alpha Texture acceleration from Constantine Sapuntzakis.
+
+commit 325df911a83e336d3463ea2220151af4e9f0ccfa
+Author: nolan <nolan>
+Date:   Sat Aug 14 01:03:55 2004 +0000
+
+    Save the register state before we write to any of them. This makes the
+        VMware driver coexist with VESA fbcon.
+
+commit fed82eea7b64b645926c5102563887bc424245b7
+Author: nolan <nolan>
+Date:   Tue Jun 29 02:20:25 2004 +0000
+
+    Send cursor hotspot through the FIFO. This fixes host cursor. Allow any bpp
+        when 8BIT_EMULATION is set. Save/restore the ID register.
+
+commit a3bdeecbb99c721987a22d52c8adf4b1a96e8eec
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:22:38 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 2e4ba05c72961b611c9c4b93038ce54ab54ab9c3
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:53:57 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit b01798791090f20fbf4907902d0d35853c05e3a2
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:42 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 2ef56b50d6b4fc44359b2bf181ece342fb569153
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:28 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 7218efdc0d95a5d50b3ddfc6a76921e285cf61b6
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:56 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 205e213f8b296c47a80e7c8cfb835449b064fd84
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:29 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 2f79bc6606f337d0d892e6c73cdf11fe211ead13
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:43 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 118eb1bdba4191972b1ca182e34f3d3ca456daea
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 0b01e22c9cd727cce23c4a9670806f7a839e1937
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision
