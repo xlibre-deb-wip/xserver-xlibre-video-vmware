@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:10.15.0-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:10.15.0-1) unstable; urgency=low
 
   [ Timo Aaltonen ]
   * Replaces/Conflicts: xserver-xorg-driver-vmware.
@@ -14,7 +14,11 @@ xserver-xorg-video-vmware (1:10.15.0-1) UNRELEASED; urgency=low
     module in the long description.
   * Remove Fabio from uploaders with his permission. He's always welcome back.
 
- -- Brice Goglin <Brice.Goglin@ens-lyon.org>  Mon, 30 Apr 2007 13:01:58 +0200
+  [ David Nusinow ]
+  * Build against xserver 1.4 and upload to unstable
+  * Remove Branden from uploaders with his permission.
+
+ -- David Nusinow <dnusinow@debian.org>  Sun, 16 Sep 2007 17:05:31 -0400
 
 xserver-xorg-video-vmware (1:10.14.1-2) experimental; urgency=low
 
