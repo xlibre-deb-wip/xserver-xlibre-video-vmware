@@ -1,3 +1,9 @@
+xserver-xorg-video-vmware (1:10.15.0-2) UNRELEASED; urgency=low
+
+  * Add upstream URL to debian/copyright.
+
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 19 Sep 2007 00:19:43 +0200
+
 xserver-xorg-video-vmware (1:10.15.0-1) unstable; urgency=low
 
   [ Timo Aaltonen ]
