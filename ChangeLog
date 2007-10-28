@@ -1,3 +1,44 @@
+commit 73db59fd82ced7a88f6da35d5088608e163f3d86
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Sep 25 16:06:38 2007 -0700
+
+    Update for 10.15.2 release
+
+commit ee2fe14d37c9f3c8a170f8e3fcbc62403687ab8f
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Sep 24 11:48:12 2007 -0700
+
+    There are problems when running with old X releases with a
+    global symbol collision with the mouse driver.
+
+commit cfdb0140fa53155ae134ba961ec7d593d5d94713
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Sep 10 21:19:38 2007 -0700
+
+    Guard modinfo section against gcc.
+
+commit e41aef1fb187c1b450fbea0163eb16e0c40f0435
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Sep 10 21:16:04 2007 -0700
+
+    Ready 10.15.1 release.
+    
+    To allow for easier detection of driver version by other VMware tools,
+    we are embedding the version in a .modinfo section so that the Linux
+    kernel 'modinfo' tool can be (ab)used to check it.
+
+commit 2331c7d1629f9841c02cf907ef4fa8b679cc5141
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:51 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit ec4dc29434bbbcf382de51fe3355679654489ad7
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Jul 9 13:45:22 2007 -0700
+
+    Update copyright date.
+
 commit 0c76b95e7aeac034cc598ea6a407187f76466411
 Author: Philip Langdale <philipl@fido2.homeip.net>
 Date:   Fri Feb 9 15:06:17 2007 -0800
