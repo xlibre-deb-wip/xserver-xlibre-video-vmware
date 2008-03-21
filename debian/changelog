@@ -5,6 +5,9 @@ xserver-xorg-video-vmware (1:10.16.0-1) UNRELEASED; urgency=low
 
   [ Julien Cristau ]
   * New upstream release.
+  * Build against xserver 1.5 rc1.
+  * Bump Standards-Version to 3.7.3.
+  * Drop the XS- prefix from Vcs-* control fields.
 
  -- Timo Aaltonen <tjaalton@cc.hut.fi>  Mon, 04 Feb 2008 18:01:59 +0200
 
