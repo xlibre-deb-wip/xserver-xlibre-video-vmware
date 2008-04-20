@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:10.16.1-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:10.16.1-1) unstable; urgency=low
 
   [ Brice Goglin ]
   * New upstream release.
@@ -11,7 +11,7 @@ xserver-xorg-video-vmware (1:10.16.1-1) UNRELEASED; urgency=low
   [ Timo Aaltonen ]
   * Add vmware.ids. Thanks Soren Hansen!
 
- -- Brice Goglin <bgoglin@debian.org>  Sun, 20 Apr 2008 14:57:27 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Sun, 20 Apr 2008 14:58:19 +0200
 
 xserver-xorg-video-vmware (1:10.15.2-1) unstable; urgency=low
 
