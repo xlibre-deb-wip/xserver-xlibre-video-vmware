@@ -4,11 +4,14 @@ xserver-xorg-video-vmware (1:10.16.1-1) UNRELEASED; urgency=low
   * New upstream release.
   * Bump Standards-Version to 3.7.3 (no changes).
   * The Vcs-* fields are now recognized by dpkg, so drop the XS- prefix.
+  * Run dpkg-shlibdeps with --warnings=6.  Drivers reference symbols from
+    /usr/bin/Xorg and other modules, and that's not a bug, so we want
+    dpkg-shlibdeps to shut up about symbols it can't find.
 
   [ Timo Aaltonen ]
   * Add vmware.ids. Thanks Soren Hansen!
 
- -- Brice Goglin <bgoglin@debian.org>  Sun, 20 Apr 2008 14:56:15 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Sun, 20 Apr 2008 14:57:27 +0200
 
 xserver-xorg-video-vmware (1:10.15.2-1) unstable; urgency=low
 
