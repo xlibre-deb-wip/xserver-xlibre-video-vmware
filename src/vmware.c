@@ -82,8 +82,8 @@ char rcsId_vmware[] =
 #define VMWARE_NAME "VMWARE"
 #define VMWARE_DRIVER_NAME "vmware"
 #define VMWARE_MAJOR_VERSION	10
-#define VMWARE_MINOR_VERSION	15
-#define VMWARE_PATCHLEVEL	2
+#define VMWARE_MINOR_VERSION	16
+#define VMWARE_PATCHLEVEL	1
 #define VMWARE_DRIVER_VERSION \
    (VMWARE_MAJOR_VERSION * 65536 + VMWARE_MINOR_VERSION * 256 + VMWARE_PATCHLEVEL)
 #define VMWARE_DRIVER_VERSION_STRING \
@@ -114,6 +114,18 @@ static resRange vmwareLegacyRes[] = {
       SVGA_LEGACY_BASE_PORT + SVGA_NUM_PORTS*sizeof(uint32)},
     _VGA_EXCLUSIVE, _END
 };
+
+#if XSERVER_LIBPCIACCESS
+
+#define VMWARE_DEVICE_MATCH(d, i) \
+    {PCI_VENDOR_VMWARE, (d), PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, (i) }
+
+static const struct pci_id_match VMwareDeviceMatch[] = {
+    VMWARE_DEVICE_MATCH (PCI_CHIP_VMWARE0405, 0 ),
+    VMWARE_DEVICE_MATCH (PCI_CHIP_VMWARE0710, 0 ),
+    { 0, 0, 0 },
+};
+#endif
 
 /*
  * Currently, even the PCI obedient 0405 chip still only obeys IOSE and
@@ -374,7 +386,7 @@ VMXGetVMwareSvgaId(VMWAREPtr pVMWARE)
     return SVGA_ID_INVALID;
 }
 
-
+#ifndef XSERVER_LIBPCIACCESS
 /*
  *----------------------------------------------------------------------
  *
@@ -420,6 +432,7 @@ RewriteTagString(const char *istr, char *ostr, int osize)
 	*op++ = chr;
     } while (chr);
 }
+#endif
 
 static void
 VMWAREIdentify(int flags)
@@ -597,17 +610,22 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         return FALSE;
     }
 
-    if (pVMWARE->PciInfo->chipType == PCI_CHIP_VMWARE0710) {
+    if (DEVICE_ID(pVMWARE->PciInfo) == PCI_CHIP_VMWARE0710) {
         pVMWARE->indexReg = domainIOBase +
            SVGA_LEGACY_BASE_PORT + SVGA_INDEX_PORT*sizeof(uint32);
         pVMWARE->valueReg = domainIOBase +
            SVGA_LEGACY_BASE_PORT + SVGA_VALUE_PORT*sizeof(uint32);
     } else {
         /* Note:  This setting of valueReg causes unaligned I/O */
+#if XSERVER_LIBPCIACCESS
+        pVMWARE->portIOBase = pVMWARE->PciInfo->regions[0].base_addr;
+#else
+        pVMWARE->portIOBase = pVMWARE->PciInfo->ioBase[0];
+#endif
         pVMWARE->indexReg = domainIOBase +
-           pVMWARE->PciInfo->ioBase[0] + SVGA_INDEX_PORT;
+           pVMWARE->portIOBase + SVGA_INDEX_PORT;
         pVMWARE->valueReg = domainIOBase +
-           pVMWARE->PciInfo->ioBase[0] + SVGA_VALUE_PORT;
+           pVMWARE->portIOBase + SVGA_VALUE_PORT;
     }
     xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
                "VMware SVGA regs at (0x%04lx, 0x%04lx)\n",
@@ -636,8 +654,10 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         return FALSE;
     }
 
+#if !XSERVER_LIBPCIACCESS
     pVMWARE->PciTag = pciTag(pVMWARE->PciInfo->bus, pVMWARE->PciInfo->device,
                              pVMWARE->PciInfo->func);
+#endif
     pVMWARE->Primary = xf86IsPrimaryPci(pVMWARE->PciInfo);
 
     pScrn->monitor = pScrn->confScreen->monitor;
@@ -853,10 +873,10 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     }
 
     from = X_PROBED;
-    pScrn->chipset = (char*)xf86TokenToString(VMWAREChipsets, pVMWARE->PciInfo->chipType);
+    pScrn->chipset = (char*)xf86TokenToString(VMWAREChipsets, DEVICE_ID(pVMWARE->PciInfo));
 
     if (!pScrn->chipset) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ChipID 0x%04x is not recognised\n", pVMWARE->PciInfo->chipType);
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ChipID 0x%04x is not recognised\n", DEVICE_ID(pVMWARE->PciInfo));
         return FALSE;
     }
 
@@ -983,14 +1003,32 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
 static Bool
 VMWAREMapMem(ScrnInfoPtr pScrn)
 {
-    VMWAREPtr pVMWARE;
+    VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
+#if XSERVER_LIBPCIACCESS
+    int err;
+    struct pci_device *const device = pVMWARE->PciInfo;
+#endif
 
-    pVMWARE = VMWAREPTR(pScrn);
+#if XSERVER_LIBPCIACCESS
+   err = pci_device_map_range(device,
+                              pVMWARE->memPhysBase,
+                              pVMWARE->videoRam,
+                              PCI_DEV_MAP_FLAG_WRITABLE | 
+                              PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+                              (void **) &pVMWARE->FbBase);
+   if (err) {
+       xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                  "Unable to map frame buffer BAR. %s (%d)\n",
+                  strerror (err), err);
+       return FALSE;
+   }
 
+#else
     pVMWARE->FbBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
                                     pVMWARE->PciTag,
                                     pVMWARE->memPhysBase,
                                     pVMWARE->videoRam);
+#endif
     if (!pVMWARE->FbBase)
         return FALSE;
 
@@ -1009,7 +1047,11 @@ VMWAREUnmapMem(ScrnInfoPtr pScrn)
 
     VmwareLog(("Unmapped: %p/%u\n", pVMWARE->FbBase, pVMWARE->videoRam));
 
+#if XSERVER_LIBPCIACCESS
+    pci_device_unmap_range(pVMWARE->PciInfo, pVMWARE->FbBase, pVMWARE->videoRam);
+#else
     xf86UnMapVidMem(pScrn->scrnIndex, pVMWARE->FbBase, pVMWARE->videoRam);
+#endif
     pVMWARE->FbBase = NULL;
     return TRUE;
 }
@@ -1135,6 +1177,8 @@ VMWAREModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool rebuildPixmap)
     VmwareLog(("fbSize:        %u\n", pVMWARE->FbSize));
     VmwareLog(("New dispWidth: %u\n", pScrn->displayWidth));
 
+    vmwareCheckVideoSanity(pScrn);
+
     if (rebuildPixmap) {
         pScrn->pScreen->ModifyPixmapHeader((*pScrn->pScreen->GetScreenPixmap)(pScrn->pScreen),
                                            pScrn->pScreen->width,
@@ -1183,6 +1227,42 @@ VMWAREModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool rebuildPixmap)
        }
     }
 
+    /*
+     * Update host's view of guest topology.
+     */
+    if (pVMWARE->vmwareCapability & SVGA_CAP_DISPLAY_TOPOLOGY) {
+        if (pVMWARE->xinerama) {
+            int i = 0;
+            VMWAREXineramaPtr xineramaState = pVMWARE->xineramaState;
+            vmwareWriteReg(pVMWARE, SVGA_REG_NUM_GUEST_DISPLAYS,
+                           pVMWARE->xineramaNumOutputs);
+
+            for (i = 0; i < pVMWARE->xineramaNumOutputs; i++) {
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_ID, i);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_IS_PRIMARY, TRUE);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_X,
+                               xineramaState[i].x_org);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_Y,
+                               xineramaState[i].y_org);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_WIDTH,
+                               xineramaState[i].width);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_HEIGHT,
+                               xineramaState[i].height);
+            }
+        } else {
+            vmwareWriteReg(pVMWARE, SVGA_REG_NUM_GUEST_DISPLAYS, 1);
+
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_ID, 0);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_IS_PRIMARY, TRUE);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_X, 0);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_Y, 0);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_WIDTH, mode->HDisplay);
+            vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_HEIGHT, mode->VDisplay);
+        }
+
+        vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_ID, SVGA_INVALID_DISPLAY_ID);
+    }
+
     return TRUE;
 }
 
@@ -1196,6 +1276,10 @@ static void
 VMWAREInitFIFO(ScrnInfoPtr pScrn)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
+#if XSERVER_LIBPCIACCESS
+    struct pci_device *const device = pVMWARE->PciInfo;
+    int err;
+#endif
     CARD32* vmwareFIFO;
     Bool extendedFifo;
     int min;
@@ -1204,10 +1288,23 @@ VMWAREInitFIFO(ScrnInfoPtr pScrn)
 
     pVMWARE->mmioPhysBase = vmwareReadReg(pVMWARE, SVGA_REG_MEM_START);
     pVMWARE->mmioSize = vmwareReadReg(pVMWARE, SVGA_REG_MEM_SIZE) & ~3;
+#if XSERVER_LIBPCIACCESS
+    err = pci_device_map_range(device, pVMWARE->mmioPhysBase,
+                               pVMWARE->mmioSize,
+                               PCI_DEV_MAP_FLAG_WRITABLE,
+                               (void **) &pVMWARE->mmioVirtBase);
+    if (err) {
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                   "Unable to map mmio BAR. %s (%d)\n",
+                   strerror (err), err);
+        return;
+    }
+#else
     pVMWARE->mmioVirtBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
                                           pVMWARE->PciTag,
                                           pVMWARE->mmioPhysBase,
                                           pVMWARE->mmioSize);
+#endif
     vmwareFIFO = pVMWARE->vmwareFIFO = (CARD32*)pVMWARE->mmioVirtBase;
 
     extendedFifo = pVMWARE->vmwareCapability & SVGA_CAP_EXTENDED_FIFO;
@@ -1228,7 +1325,11 @@ VMWAREStopFIFO(ScrnInfoPtr pScrn)
     TRACEPOINT
 
     vmwareWriteReg(pVMWARE, SVGA_REG_CONFIG_DONE, 0);
+#if XSERVER_LIBPCIACCESS
+    pci_device_unmap_range(pVMWARE->PciInfo, pVMWARE->mmioVirtBase, pVMWARE->mmioSize);
+#else
     xf86UnMapVidMem(pScrn->scrnIndex, pVMWARE->mmioVirtBase, pVMWARE->mmioSize);
+#endif
 }
 
 static Bool
@@ -1241,6 +1342,10 @@ VMWARECloseScreen(int scrnIndex, ScreenPtr pScreen)
     VmwareLog(("cursorSema: %d\n", pVMWARE->cursorSema));
 
     if (*pVMWARE->pvtSema) {
+        if (pVMWARE->videoStreams) {
+            vmwareVideoEnd(pScreen);
+        }
+
         if (pVMWARE->CursorInfoRec) {
             vmwareCursorCloseScreen(pScreen);
         }
@@ -1626,6 +1731,15 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
         xf86ShowUnusedOptions(pScrn->scrnIndex, pScrn->options);
     }
 
+    /* Initialize Xv extension */
+    pVMWARE->videoStreams = NULL;
+    if (vmwareVideoEnabled(pVMWARE)) {
+        if (!vmwareVideoInit(pScreen)) {
+            xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Xv initialization failed\n");
+        }
+    }
+
+
     /* Done */
     return TRUE;
 }
@@ -1653,8 +1767,6 @@ static void
 VMWARELeaveVT(int scrnIndex, int flags)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-    VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
-
     VMWARERestore(pScrn);
 }
 
@@ -1673,6 +1785,45 @@ VMWAREValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 {
     return MODE_OK;
 }
+
+#if XSERVER_LIBPCIACCESS
+static Bool
+VMwarePciProbe (DriverPtr           drv,
+                int                 entity_num,
+                struct pci_device   *device,
+                intptr_t            match_data)
+{
+    ScrnInfoPtr     scrn = NULL;
+    EntityInfoPtr   entity;
+
+    scrn = xf86ConfigPciEntity(scrn, 0, entity_num, VMWAREPciChipsets,
+                               NULL, NULL, NULL, NULL, NULL);
+    if (scrn != NULL) {
+        scrn->driverVersion = VMWARE_DRIVER_VERSION;
+        scrn->driverName = VMWARE_DRIVER_NAME;
+        scrn->name = VMWARE_NAME;
+        scrn->Probe = NULL;
+    }
+
+    entity = xf86GetEntityInfo(entity_num);
+    switch (DEVICE_ID(device)) {
+    case PCI_CHIP_VMWARE0405:
+    case PCI_CHIP_VMWARE0710:
+        xf86MsgVerb(X_INFO, 4, "VMwarePciProbe: Valid device\n");
+        scrn->PreInit = VMWAREPreInit;
+        scrn->ScreenInit = VMWAREScreenInit;
+        scrn->SwitchMode = VMWARESwitchMode;
+        scrn->EnterVT = VMWAREEnterVT;
+        scrn->LeaveVT = VMWARELeaveVT;
+        scrn->FreeScreen = VMWAREFreeScreen;
+        scrn->ValidMode = VMWAREValidMode;
+        break;
+    default:
+        xf86MsgVerb(X_INFO, 4, "VMwarePciProbe: Unknown device\n");
+    }
+    return scrn != NULL;
+}
+#else 
 
 static Bool
 VMWAREProbe(DriverPtr drv, int flags)
@@ -1733,18 +1884,27 @@ VMWAREProbe(DriverPtr drv, int flags)
     }
     return foundScreen;
 }
+#endif
 
 
 _X_EXPORT DriverRec VMWARE = {
     VMWARE_DRIVER_VERSION,
     VMWARE_DRIVER_NAME,
     VMWAREIdentify,
+#if XSERVER_LIBPCIACCESS
+    NULL,
+#else
     VMWAREProbe,
+#endif
     VMWAREAvailableOptions,
     NULL,
     0,
 #if VMWARE_DRIVER_FUNC
     VMWareDriverFunc,
+#endif
+#if XSERVER_LIBPCIACCESS
+    VMwareDeviceMatch,
+    VMwarePciProbe,
 #endif
 };
 

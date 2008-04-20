@@ -8,13 +8,21 @@
 #ifndef VMWARE_H
 #define VMWARE_H
 
+#include "xorgVersion.h"
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(7, 1, 0, 0, 0) || XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(2, 0, 0, 0, 0)
 #include <string.h>
+#endif
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Resources.h"
 
 #include <X11/extensions/panoramiXproto.h>
+
+#include "xorg-server.h"
+#ifdef XSERVER_LIBPCIACCESS
+#include <pciaccess.h>
+#endif
 
 #include "compiler.h"	        /* inb/outb */
 
@@ -55,8 +63,12 @@ typedef xXineramaScreenInfo VMWAREXineramaRec, *VMWAREXineramaPtr;
 
 typedef struct {
     EntityInfoPtr pEnt;
+#if XSERVER_LIBPCIACCESS
+    struct pci_device *PciInfo;
+#else
     pciVideoPtr PciInfo;
     PCITAG PciTag;
+#endif
     Bool Primary;
     int depth;
     int bitsPerPixel;
@@ -68,6 +80,7 @@ typedef struct {
     unsigned long fbOffset;
     unsigned long fbPitch;
     unsigned long ioBase;
+    unsigned long portIOBase;
     int maxWidth;
     int maxHeight;
     unsigned int vmwareCapability;
@@ -132,6 +145,11 @@ typedef struct {
     VMWAREXineramaPtr xineramaNextState;
     unsigned int xineramaNextNumOutputs;
 
+    /*
+     * Xv
+     */
+    DevUnion *videoStreams;
+
 } VMWARERec, *VMWAREPtr;
 
 #define VMWAREPTR(p) ((VMWAREPtr)((p)->driverPrivate))
@@ -180,6 +198,20 @@ static __inline ScrnInfoPtr infoFromScreen(ScreenPtr s) {
 
 /* Undefine this to kill all acceleration */
 #define ACCELERATE_OPS
+
+#if XSERVER_LIBPCIACCESS
+#define VENDOR_ID(p)      (p)->vendor_id
+#define DEVICE_ID(p)      (p)->device_id
+#define SUBVENDOR_ID(p)   (p)->subvendor_id
+#define SUBSYS_ID(p)      (p)->subdevice_id
+#define CHIP_REVISION(p)  (p)->revision
+#else
+#define VENDOR_ID(p)      (p)->vendor
+#define DEVICE_ID(p)      (p)->chipType
+#define SUBVENDOR_ID(p)   (p)->subsysVendor
+#define SUBSYS_ID(p)      (p)->subsysCard
+#define CHIP_REVISION(p)  (p)->chipRev
+#endif
 
 void vmwareWriteReg(
    VMWAREPtr pVMWARE, int index, CARD32 value
@@ -238,5 +270,20 @@ void VMwareCtrl_ExtInit(ScrnInfoPtr pScrn);
 
 /* vmwarexinerama.c */
 void VMwareXinerama_ExtInit(ScrnInfoPtr pScrn);
+
+/* vmwarevideo.c */
+Bool vmwareVideoInit(
+   ScreenPtr pScreen
+   );
+void vmwareVideoEnd(
+   ScreenPtr pScreen
+   );
+Bool vmwareVideoEnabled(
+   VMWAREPtr pVMWARE
+   );
+
+void vmwareCheckVideoSanity(
+   ScrnInfoPtr pScrn
+   );
 
 #endif
