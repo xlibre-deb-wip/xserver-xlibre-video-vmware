@@ -1,3 +1,115 @@
+commit 6849c0a5fbf10722ca475d2ffcce7d0d95d2377a
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Fri Apr 18 18:00:38 2008 -0400
+
+    Change // comments to /*
+    
+    This will make it easier to compile the driver against ancient versions of X.
+
+commit b6c59761e2b984be32493f35224db523dd62bcd8
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Apr 17 23:04:45 2008 -0400
+
+    Compile warning fixes
+    
+    Major problem was prototype vmwareInitVideo not matching implementation
+    vmwareVideoInit. Remaining are adding an "ansification" of a function without
+    arguments, and removing/disabling unused variables/functions.
+
+commit 7870dc715b1efe173af1e2664778e2066508e066
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Thu Apr 17 20:54:23 2008 -0400
+
+    Bump version to 10.16.1 in configure.ac
+    
+    The previous change didn't bump up the version in configure.ac.
+
+commit be75c66fa7933c7dfa86e5514c744f47734c5fc8
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Thu Apr 17 20:39:02 2008 -0400
+
+    Prepare for 10.16.1
+    
+    Update the modinfo section and make a configure.ac fix.
+
+commit 87e9b32618f037d78d7853b48e40a71533b764d2
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Thu Apr 17 19:16:48 2008 -0400
+
+    Fix build for all modular versions of Xorg
+    
+    This change makes the video driver compile with Xorg 7.0. There are a couple of
+    trivial changes that bring down the maximum Xserver version down to 2.0. Hacky,
+    but good enough for now.
+
+commit e4fa13951a7c5dd53005a63392a439e2329fab9c
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Wed Mar 26 21:32:47 2008 -0400
+
+    Send down guest display topology
+    
+    Send down the Xinerama topology from the guest down to the host, by setting
+    display topology registers in the SVGA device.
+
+commit 5aced9e39a0bf7590c841824c0b66060eb7d5e03
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 17:03:18 2008 -0400
+
+    vmware 10.16.0
+
+commit cd8bb3018946e82b98207984efc26b13ac260e5e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 17:00:41 2008 -0400
+
+    Fix distcheck.
+
+commit 1314a1cd22823a5a7202dac4ac04da3801f1ec94
+Author: Bankim Bhavsar <bbhavsar@vmware.com>
+Date:   Fri Mar 14 12:42:40 2008 -0400
+
+    Video Overlay: Source video parameters
+    
+    This patch adds parameters to the source video frame.  Applications can request
+    only a subset of the source video frame to be displayed. These parameters are
+    srcX, srcY, srcWidth and srcHeight. width and height represent the entire
+    source video frame.
+
+commit fdef3fd5ea62a2df6283d48ba18d5c60300534ef
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 00:08:32 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit bfd8398dde2d2de238c600eece9374d24d7d8549
+Author: Bankim Bhavsar <bbhavsar@vmware.com>
+Date:   Wed Jan 23 22:13:07 2008 -0800
+
+    Xv extension for VMware's video driver
+    
+    This patch implements the Xv extension for VMware's X video driver.
+    
+    The Xv specification can be found here
+    http://www.xfree86.org/current/DESIGN16.html
+    
+    I've written a trivial offscreen memory manager that allocates memory from the
+    bottom part of the Video RAM and it can handle only 1 video-stream. Eventually
+    we intend to support upto 32 video-streams (there is already support for
+    multiple video streams in respective backends).
+
+commit a33ab73ffa5d3797d16c3a265ddefc56a5a93b6b
+Author: Vinay <vinay@vinayb-dev4.(none)>
+Date:   Sat Jan 19 08:39:24 2008 -0800
+
+    Trivial libpciaccess related fix
+    
+    Fix VMWAREUnmapMem to correctly unmap memory for the libpciaccess case.
+
+commit 62d898669baccfd4c312f3ed8f228d0c3217d3c3
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Mon Oct 8 10:54:04 2007 -0700
+
+    Port to libpciaccess.
+
 commit 73db59fd82ced7a88f6da35d5088608e163f3d86
 Author: Philip Langdale <philipl@fido2.homeip.net>
 Date:   Tue Sep 25 16:06:38 2007 -0700
