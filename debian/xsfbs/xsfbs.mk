@@ -21,10 +21,8 @@
 # Pass $(DH_OPTIONS) into the environment for debhelper's benefit.
 export DH_OPTIONS
 
-# force quilt to not use ~/.quiltrc
-QUILT = quilt --quiltrc /dev/null
-# force QUILT_PATCHES to the default in case it is exported in the environment
-QUILT_PATCHES = patches/
+# force quilt to not use ~/.quiltrc and to use debian/patches
+QUILT = QUILT_PATCHES=debian/patches quilt --quiltrc /dev/null
 
 # Set up parameters for the upstream build environment.
 
@@ -121,18 +119,10 @@ $(STAMP_DIR)/stampdir:
 # Set up the package build directory as quilt expects to find it.
 .PHONY: prepare
 stampdir_targets+=prepare
-prepare: $(STAMP_DIR)/genscripts $(STAMP_DIR)/prepare $(STAMP_DIR)/patches $(STAMP_DIR)/log
+prepare: $(STAMP_DIR)/genscripts $(STAMP_DIR)/prepare $(STAMP_DIR)/log
 $(STAMP_DIR)/prepare: $(STAMP_DIR)/stampdir
-	if [ ! -e $(STAMP_DIR)/patches ]; then \
-		mkdir $(STAMP_DIR)/patches; \
-		ln -s $(STAMP_DIR)/patches .pc; \
-		echo 2 >$(STAMP_DIR)/patches/.version; \
-	fi; \
 	if [ ! -e $(STAMP_DIR)/log ]; then \
 		mkdir $(STAMP_DIR)/log; \
-	fi; \
-	if [ -e debian/patches ] && [ ! -e patches ]; then \
-		ln -s debian/patches patches; \
 	fi; \
 	>$@
 
@@ -162,10 +152,10 @@ $(STAMP_DIR)/patch: $(STAMP_DIR)/prepare
 
 # Revert all patches to the upstream source.
 .PHONY: unpatch
-unpatch:
+unpatch: $(STAMP_DIR)/prepare
 	rm -f $(STAMP_DIR)/patch
 	@echo -n "Unapplying patches..."; \
-	if [ -e $(STAMP_DIR)/patches/applied-patches ]; then \
+	if $(QUILT) applied >/dev/null 2>/dev/null; then \
 	  if $(QUILT) pop -a -v >$(STAMP_DIR)/log/unpatch 2>&1; then \
 	    cat $(STAMP_DIR)/log/unpatch; \
 	    echo "successful."; \
@@ -192,11 +182,10 @@ cleanscripts:
 .PHONY: xsfclean
 xsfclean: cleanscripts unpatch
 	dh_testdir
-	rm -f .pc patches
+	rm -rf .pc
 	rm -rf $(STAMP_DIR) $(SOURCE_DIR)
 	rm -rf imports
 	dh_clean debian/shlibs.local \
-	         debian/MANIFEST.$(ARCH) debian/MANIFEST.$(ARCH).new \
 	         debian/po/pothead
 
 # Generate the debconf templates POT file header.
@@ -208,58 +197,6 @@ debian/po/pothead: debian/po/pothead.in
 .PHONY: updatepo
 updatepo: debian/po/pothead
 	debian/scripts/debconf-updatepo --pot-header=pothead --verbose
-
-# Use the MANIFEST files to determine whether we're shipping everything we
-# expect to ship, and not shipping anything we don't expect to ship.
-.PHONY: check-manifest
-stampdir_targets+=check-manifest
-check-manifest: $(STAMP_DIR)/check-manifest
-$(STAMP_DIR)/check-manifest: $(STAMP_DIR)/install
-	# Compare manifests.
-	(cd debian/tmp && find -type f | LC_ALL=C sort | cut -c3-) \
-	  >debian/MANIFEST.$(ARCH).new
-	# Construct MANIFEST files from MANIFEST.$(ARCH).in and
-	# MANIFEST.$(ARCH).all or MANIFEST.all.
-	if expr "$(findstring -DBuildFonts=NO,$(IMAKE_DEFINES))" \
-	  : "-DBuildFonts=NO" >/dev/null 2>&1; then \
-	  LC_ALL=C sort -u debian/MANIFEST.$(ARCH).in >debian/MANIFEST.$(ARCH); \
-	else \
-	  if [ -e debian/MANIFEST.$(ARCH).all ]; then \
-	    LC_ALL=C sort -u debian/MANIFEST.$(ARCH).in debian/MANIFEST.$(ARCH).all >debian/MANIFEST.$(ARCH); \
-	  else \
-	    LC_ALL=C sort -u debian/MANIFEST.$(ARCH).in debian/MANIFEST.all >debian/MANIFEST.$(ARCH); \
-	  fi; \
-	fi
-	# Confirm that the installed file list has not changed.
-	if [ -e debian/MANIFEST.$(ARCH) ]; then \
-	  if ! cmp -s debian/MANIFEST.$(ARCH) debian/MANIFEST.$(ARCH).new; then \
-	    diff -U 0 debian/MANIFEST.$(ARCH) debian/MANIFEST.$(ARCH).new || DIFFSTATUS=$$?; \
-	    case $${DIFFSTATUS:-0} in \
-	      0) ;; \
-	      1) if [ -n "$$IGNORE_MANIFEST_CHANGES" ]; then \
-	           echo 'MANIFEST check failed; ignoring problem because \$$IGNORE_MANIFEST_CHANGES set' >&2; \
-	           echo 'Please ensure that the package maintainer has an up-to-date version of the' >&2; \
-	           echo 'MANIFEST.$(ARCH).in file.' >&2; \
-	         else \
-	           echo 'MANIFEST check failed; please see debian/README' >&2; \
-	           exit 1; \
-	         fi; \
-	         ;; \
-	      *) echo "diff reported unexpected exit status $$DIFFSTATUS when performing MANIFEST check" >&2; \
-	         exit 1; \
-	         ;; \
-	    esac; \
-	  fi; \
-	fi
-	>$@
-
-# Because we build (and install) different files depending on whether or not
-# any architecture-independent packages are being created, the list of files we
-# expect to see will differ; see the discussion of the "build" target above.
-.PHONY: check-manifest-arch check-manifest-indep
-check-manifest-arch: IMAKE_DEFINES+= -DBuildSpecsDocs=NO -DBuildFonts=NO -DInstallHardcopyDocs=NO
-check-manifest-arch: check-manifest
-check-manifest-indep: check-manifest
 
 # Remove files from the upstream source tree that we don't need, or which have
 # licensing problems.  It must be run before creating the .orig.tar.gz.
@@ -350,7 +287,7 @@ PACKAGE=$(shell awk '/^Package:/ { print $$2; exit }' < debian/control)
 endif
 
 .PHONY: serverabi
-serverabi:
+serverabi: install
 ifeq ($(SERVERMINVERS),)
 	@echo error: xserver-xorg-dev needs to be installed
 	@exit 1
@@ -359,7 +296,5 @@ else
 	echo "xviddriver:Provides=$(VIDDRIVER_PROVIDES)" >> debian/$(PACKAGE).substvars
 	echo "xinpdriver:Provides=$(INPDRIVER_PROVIDES)" >> debian/$(PACKAGE).substvars
 endif
-
-include debian/xsfbs/xsfbs-autoreconf.mk
 
 # vim:set noet ai sts=8 sw=8 tw=0:
