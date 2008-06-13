@@ -1,3 +1,30 @@
+commit b53bb2ad4c6f6e378cbf82a98cac917736d62740
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Thu Jun 12 17:34:30 2008 -0400
+
+    Prepare for 10.16.2
+    
+    Bump up version numbers.
+
+commit 1f7a8390a32852d2ff0039a7d8138a292d17b50a
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Tue Apr 29 18:29:11 2008 -0400
+
+    Fix VMWARE_CTRL and Xinerama Initialization
+    
+    Move initialization code for the vmware control and xinerama extensions to
+    VMWAREScreenInit(), so that auto-resize and multi-mon work fine after a user
+    logs out and logs in again in a graphical display manager.
+
+commit db027200474684c0aa4b9387f3ed53b2e5f24478
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Tue Apr 22 14:18:45 2008 -0400
+
+    More xorg and xfree86 backwards compatibility
+    
+    Push most of the xorg-server version checking into the configure script. With
+    this change, unmodified driver source compiles in the XFree86 4.3 tree.
+
 commit 6849c0a5fbf10722ca475d2ffcce7d0d95d2377a
 Author: Vinay Bondhugula <vinayb@vmware.com>
 Date:   Fri Apr 18 18:00:38 2008 -0400
