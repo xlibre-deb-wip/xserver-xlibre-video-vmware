@@ -1,13 +1,12 @@
-xserver-xorg-video-vmware (1:10.16.5-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:10.16.5-1) experimental; urgency=low
 
-  [ Julien Cristau ]
   * Build against xserver 1.5.
   * Switch to running autoreconf at build time.  Build-depend on automake,
     libtool and xutils-dev, and remove generated files in clean.
   * New upstream release.
   * Support parallel builds.
 
- -- Timo Aaltonen <tjaalton@cc.hut.fi>  Mon, 04 Feb 2008 18:01:59 +0200
+ -- Julien Cristau <jcristau@debian.org>  Wed, 10 Sep 2008 13:56:32 +0100
 
 xserver-xorg-video-vmware (1:10.16.2-1) unstable; urgency=low
 
