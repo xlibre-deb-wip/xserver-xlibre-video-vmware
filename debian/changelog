@@ -1,7 +1,7 @@
 xserver-xorg-video-vmware (1:10.16.5-1) UNRELEASED; urgency=low
 
   [ Julien Cristau ]
-  * Build against xserver 1.5 rc1.
+  * Build against xserver 1.5.
   * Switch to running autoreconf at build time.  Build-depend on automake,
     libtool and xutils-dev, and remove generated files in clean.
   * New upstream release.
