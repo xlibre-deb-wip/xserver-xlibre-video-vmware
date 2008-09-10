@@ -8,7 +8,14 @@
 #ifndef VMWARE_H
 #define VMWARE_H
 
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef HAVE_XORG_SERVER_1_1_0
 #include <string.h>
+#endif
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -16,7 +23,6 @@
 
 #include <X11/extensions/panoramiXproto.h>
 
-#include "xorg-server.h"
 #ifdef XSERVER_LIBPCIACCESS
 #include <pciaccess.h>
 #endif
@@ -269,7 +275,7 @@ void VMwareCtrl_ExtInit(ScrnInfoPtr pScrn);
 void VMwareXinerama_ExtInit(ScrnInfoPtr pScrn);
 
 /* vmwarevideo.c */
-Bool vmwareInitVideo(
+Bool vmwareVideoInit(
    ScreenPtr pScreen
    );
 void vmwareVideoEnd(

@@ -138,12 +138,19 @@ enum {
    SVGA_REG_NUM_DISPLAYS = 31,     /* Number of guest displays */
    SVGA_REG_PITCHLOCK = 32,        /* Fixed pitch for all modes */
    SVGA_REG_IRQMASK = 33,          /* Interrupt mask */
-   SVGA_REG_TOP = 34,		   /* Must be 1 more than the last register */
+   SVGA_REG_NUM_GUEST_DISPLAYS = 34,/* Number of guest displays in X/Y direction */
+   SVGA_REG_DISPLAY_ID = 35,        /* The display ID for the following display attributes */
+   SVGA_REG_DISPLAY_IS_PRIMARY = 36,/* Whether this is a primary display */
+   SVGA_REG_DISPLAY_POSITION_X = 37,/* The display position x */
+   SVGA_REG_DISPLAY_POSITION_Y = 38,/* The display position y */
+   SVGA_REG_DISPLAY_WIDTH = 39,     /* The display's width */
+   SVGA_REG_DISPLAY_HEIGHT = 40,    /* The display's height */
+   SVGA_REG_TOP = 41,               /* Must be 1 more than the last register */
 
-   SVGA_PALETTE_BASE = 1024,	   /* Base of SVGA color map */
+   SVGA_PALETTE_BASE = 1024,	    /* Base of SVGA color map */
    /* Next 768 (== 256*3) registers exist for colormap */
    SVGA_SCRATCH_BASE = SVGA_PALETTE_BASE + SVGA_NUM_PALETTE_REGS
-                                   /* Base of scratch registers */
+                                    /* Base of scratch registers */
    /* Next reg[SVGA_REG_SCRATCH_SIZE] registers exist for scratch usage:
       First 4 are reserved for VESA BIOS Extension; any remaining are for
       the use of the current SVGA driver. */
@@ -154,26 +161,28 @@ enum {
  *  Capabilities
  */
 
-#define	SVGA_CAP_NONE               0x00000
-#define	SVGA_CAP_RECT_FILL	    0x00001
-#define	SVGA_CAP_RECT_COPY	    0x00002
-#define	SVGA_CAP_RECT_PAT_FILL      0x00004
-#define	SVGA_CAP_LEGACY_OFFSCREEN   0x00008
-#define	SVGA_CAP_RASTER_OP	    0x00010
-#define	SVGA_CAP_CURSOR		    0x00020
-#define	SVGA_CAP_CURSOR_BYPASS	    0x00040
-#define	SVGA_CAP_CURSOR_BYPASS_2    0x00080
-#define	SVGA_CAP_8BIT_EMULATION     0x00100
-#define SVGA_CAP_ALPHA_CURSOR       0x00200
-#define SVGA_CAP_GLYPH              0x00400
-#define SVGA_CAP_GLYPH_CLIPPING     0x00800
-#define SVGA_CAP_OFFSCREEN_1        0x01000
-#define SVGA_CAP_ALPHA_BLEND        0x02000
-#define SVGA_CAP_3D                 0x04000
-#define SVGA_CAP_EXTENDED_FIFO      0x08000
-#define SVGA_CAP_MULTIMON           0x10000
-#define SVGA_CAP_PITCHLOCK          0x20000
-#define SVGA_CAP_IRQMASK            0x40000
+#define SVGA_CAP_NONE               0x00000000
+#define SVGA_CAP_RECT_FILL	    0x00000001
+#define SVGA_CAP_RECT_COPY	    0x00000002
+#define SVGA_CAP_RECT_PAT_FILL      0x00000004
+#define SVGA_CAP_LEGACY_OFFSCREEN   0x00000008
+#define SVGA_CAP_RASTER_OP	    0x00000010
+#define SVGA_CAP_CURSOR		    0x00000020
+#define SVGA_CAP_CURSOR_BYPASS	    0x00000040
+#define SVGA_CAP_CURSOR_BYPASS_2    0x00000080
+#define SVGA_CAP_8BIT_EMULATION     0x00000100
+#define SVGA_CAP_ALPHA_CURSOR       0x00000200
+#define SVGA_CAP_GLYPH              0x00000400
+#define SVGA_CAP_GLYPH_CLIPPING     0x00000800
+#define SVGA_CAP_OFFSCREEN_1        0x00001000
+#define SVGA_CAP_ALPHA_BLEND        0x00002000
+#define SVGA_CAP_3D                 0x00004000
+#define SVGA_CAP_EXTENDED_FIFO      0x00008000
+#define SVGA_CAP_MULTIMON           0x00010000
+#define SVGA_CAP_PITCHLOCK          0x00020000
+#define SVGA_CAP_IRQMASK            0x00040000
+#define SVGA_CAP_DISPLAY_TOPOLOGY   0x00080000
+
 
 /*
  *  Raster op codes (same encoding as X) used by FIFO drivers.
@@ -200,6 +209,8 @@ enum {
 #define SVGA_NUM_SUPPORTED_ROPS   16
 #define SVGA_ROP_ALL            (MASK(SVGA_NUM_SUPPORTED_ROPS))
 #define SVGA_IS_VALID_ROP(rop)  (rop < SVGA_NUM_SUPPORTED_ROPS)
+
+#define SVGA_INVALID_DISPLAY_ID ((uint32)-1)
 
 /*
  *  Ops
@@ -309,7 +320,7 @@ enum {
 
    SVGA_FIFO_CAPABILITIES = 4,
    SVGA_FIFO_FLAGS,
-   // Valid with SVGA_FIFO_CAP_FENCE:
+   /* Valid with SVGA_FIFO_CAP_FENCE: */
    SVGA_FIFO_FENCE,
 
    /*
@@ -322,17 +333,17 @@ enum {
     * extended FIFO.
     */
    
-   // Valid if exists (i.e. if extended FIFO enabled):
+   /* Valid if exists (i.e. if extended FIFO enabled): */
    SVGA_FIFO_3D_HWVERSION,       /* See SVGA3dHardwareVersion in svga3d_reg.h */
-   // Valid with SVGA_FIFO_CAP_PITCHLOCK:
+   /* Valid with SVGA_FIFO_CAP_PITCHLOCK: */
    SVGA_FIFO_PITCHLOCK,
-   // Valid with SVGA_FIFO_CAP_CURSOR_BYPASS_3:
+   /* Valid with SVGA_FIFO_CAP_CURSOR_BYPASS_3: */
    SVGA_FIFO_CURSOR_ON,          /* Cursor bypass 3 show/hide register */
    SVGA_FIFO_CURSOR_X,           /* Cursor bypass 3 x register */
    SVGA_FIFO_CURSOR_Y,           /* Cursor bypass 3 y register */
    SVGA_FIFO_CURSOR_COUNT,       /* Incremented when any of the other 3 change */
    SVGA_FIFO_CURSOR_LAST_UPDATED,/* Last time the host updated the cursor */
-   // Valid with SVGA_FIFO_CAP_RESERVE:
+   /* Valid with SVGA_FIFO_CAP_RESERVE: */
    SVGA_FIFO_RESERVED,           /* Bytes past NEXT_CMD with real contents */
    /*
     * XXX: The gap here, up until SVGA_FIFO_3D_CAPS, can be used for new
@@ -371,7 +382,7 @@ enum {
     * sets SVGA_FIFO_MIN high enough to leave room for them.
     */
 
-   // Valid if register exists:
+   /* Valid if register exists: */
    SVGA_FIFO_GUEST_3D_HWVERSION, /* Guest driver's 3D version */
    SVGA_FIFO_FENCE_GOAL,         /* Matching target for SVGA_IRQFLAG_FENCE_GOAL */
    SVGA_FIFO_BUSY,               /* See "FIFO Synchronization Registers" */
@@ -542,7 +553,7 @@ enum {
 
 #define SVGA_FIFO_FLAG_NONE                 0
 #define SVGA_FIFO_FLAG_ACCELFRONT       (1<<0)
-#define SVGA_FIFO_FLAG_RESERVED        (1<<31) // Internal use only
+#define SVGA_FIFO_FLAG_RESERVED        (1<<31) /* Internal use only */
 
 /*
  * FIFO reservation sentinel value
@@ -806,13 +817,13 @@ typedef struct SVGAOverlayUnit {
 /*
  * Location and size of SVGA frame buffer and the FIFO.
  */
-#define SVGA_VRAM_MIN_SIZE   (4 * 640 * 480)  // bytes
+#define SVGA_VRAM_MIN_SIZE   (4 * 640 * 480)  /* bytes */
 #define SVGA_VRAM_MAX_SIZE   (128 * 1024 * 1024)
 
-#define SVGA_VRAM_SIZE_WS       (16 * 1024 * 1024) // 16 MB
-#define SVGA_MEM_SIZE_WS        (2  * 1024 * 1024) // 2  MB
-#define SVGA_VRAM_SIZE_SERVER   (4  * 1024 * 1024) // 4  MB
-#define SVGA_MEM_SIZE_SERVER    (256 * 1024)       // 256 KB
+#define SVGA_VRAM_SIZE_WS       (16 * 1024 * 1024) /* 16 MB */
+#define SVGA_MEM_SIZE_WS        (2  * 1024 * 1024) /* 2  MB */
+#define SVGA_VRAM_SIZE_SERVER   (4  * 1024 * 1024) /* 4  MB */
+#define SVGA_MEM_SIZE_SERVER    (256 * 1024)       /* 256 KB */
 
 #if /* defined(VMX86_WGS) || */ defined(VMX86_SERVER)
 #define SVGA_VRAM_SIZE         SVGA_VRAM_SIZE_SERVER

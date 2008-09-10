@@ -45,10 +45,6 @@
 #include "svga_overlay.h"
 
 #include <X11/extensions/Xv.h>
-/*
- * Need this to figure out which prototype to use for XvPutImage
- */
-#include "xorgVersion.h"
 
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
@@ -170,7 +166,7 @@ typedef VMWAREVideoRec *VMWAREVideoPtr;
 /*
  * Callback functions
  */
-#if XORG_VERSION_CURRENT > XORG_VERSION_NUMERIC(7, 0, 0, 0, 0) || XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(4, 0, 0, 0, 0)
+#ifdef HAVE_XORG_SERVER_1_0_99_901
 static int vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
                             short drw_x, short drw_y, short src_w, short src_h,
                             short drw_w, short drw_h, int image,
@@ -224,7 +220,7 @@ static void vmwareVideoEndStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid);
 /*
  * Offscreen memory manager functions
  */
-static void vmwareOffscreenInit();
+static void vmwareOffscreenInit(void);
 static VMWAREOffscreenPtr vmwareOffscreenAllocate(VMWAREPtr pVMWARE,
                                                   uint32 size);
 static void vmwareOffscreenFree(VMWAREOffscreenPtr memptr);
@@ -282,7 +278,7 @@ vmwareCheckVideoSanity(ScrnInfoPtr pScrn)
  */
 
 static void
-vmwareOffscreenInit()
+vmwareOffscreenInit(void)
 {
     offscreenMgr.size = 0;
     offscreenMgr.offset  = 0;
@@ -415,7 +411,6 @@ Bool vmwareVideoEnabled(VMWAREPtr pVMWARE)
 Bool vmwareVideoInit(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = infoFromScreen(pScreen);
-    VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
     XF86VideoAdaptorPtr *overlayAdaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     int numAdaptors;
@@ -615,7 +610,6 @@ static int vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
                                  unsigned char *buf, short width, short height)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
-    ScreenPtr pScreen = pScrn->pScreen;
     int i;
 
     TRACEPOINT
@@ -970,7 +964,7 @@ static void vmwareVideoEndStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid)
  *-----------------------------------------------------------------------------
  */
 
-#if XORG_VERSION_CURRENT > XORG_VERSION_NUMERIC(7, 0, 0, 0, 0) || XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(4, 0, 0, 0, 0)
+#ifdef HAVE_XORG_SERVER_1_0_99_901
 static int vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
                             short drw_x, short drw_y, short src_w, short src_h,
                             short drw_w, short drw_h, int format,

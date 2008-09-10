@@ -1,15 +1,31 @@
-xserver-xorg-video-vmware (1:10.16.0-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:10.16.2-2) UNRELEASED; urgency=low
+
+  [ Julien Cristau ]
+  * Build against xserver 1.5 rc1.
+
+ -- Timo Aaltonen <tjaalton@cc.hut.fi>  Mon, 04 Feb 2008 18:01:59 +0200
+
+xserver-xorg-video-vmware (1:10.16.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * Build-depend on dpkg-dev >= 1.14.17 for dpkg-shlibdeps --warnings.
+
+ -- Brice Goglin <bgoglin@debian.org>  Fri, 13 Jun 2008 22:15:37 +0200
+
+xserver-xorg-video-vmware (1:10.16.1-1) unstable; urgency=low
+
+  [ Brice Goglin ]
+  * New upstream release.
+  * Bump Standards-Version to 3.7.3 (no changes).
+  * The Vcs-* fields are now recognized by dpkg, so drop the XS- prefix.
+  * Run dpkg-shlibdeps with --warnings=6.  Drivers reference symbols from
+    /usr/bin/Xorg and other modules, and that's not a bug, so we want
+    dpkg-shlibdeps to shut up about symbols it can't find.
 
   [ Timo Aaltonen ]
   * Add vmware.ids. Thanks Soren Hansen!
 
-  [ Julien Cristau ]
-  * New upstream release.
-  * Build against xserver 1.5 rc1.
-  * Bump Standards-Version to 3.7.3.
-  * Drop the XS- prefix from Vcs-* control fields.
-
- -- Timo Aaltonen <tjaalton@cc.hut.fi>  Mon, 04 Feb 2008 18:01:59 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Sun, 20 Apr 2008 14:58:19 +0200
 
 xserver-xorg-video-vmware (1:10.15.2-1) unstable; urgency=low
 
