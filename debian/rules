@@ -31,20 +31,25 @@ endif
 # kbd_drv.a isn't phenomenally useful; kbd_drv.so more so
 confflags += --disable-static
 
-build: build-stamp
-build-stamp:
+configure:
 	dh_testdir
+	autoreconf -vfi
 
-	test -d obj-$(DEB_BUILD_GNU_TYPE) || mkdir obj-$(DEB_BUILD_GNU_TYPE)
+obj-$(DEB_BUILD_GNU_TYPE)/Makefile: configure
+	dh_testdir
+	mkdir -p obj-$(DEB_BUILD_GNU_TYPE)
 	cd obj-$(DEB_BUILD_GNU_TYPE) && \
 	../configure --prefix=/usr --mandir=\$${prefix}/share/man \
 	             --infodir=\$${prefix}/share/info $(confflags) \
 	             CFLAGS="$(CFLAGS)" 
+
+build: build-stamp
+build-stamp: obj-$(DEB_BUILD_GNU_TYPE)/Makefile
+	dh_testdir
 	cd obj-$(DEB_BUILD_GNU_TYPE) && $(MAKE)
+	>$@
 
-	touch build-stamp
-
-clean:
+clean: xsfclean
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
@@ -54,6 +59,9 @@ clean:
 	rm -f conftest* */conftest*
 	rm -rf autom4te.cache */autom4te.cache
 	rm -rf obj-*
+	rm -f $$(find -name Makefile.in)
+	rm -f compile config.guess config.sub configure depcomp install-sh
+	rm -f ltmain.sh missing INSTALL aclocal.m4 config.h.in mkinstalldirs
 
 	dh_clean
 
