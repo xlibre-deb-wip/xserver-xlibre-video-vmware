@@ -1,3 +1,118 @@
+commit 1bbef3aa7ab15ee93cd4cd47c3d484ac91f0440d
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Aug 19 11:23:44 2008 -0700
+
+    Bump version for 10.16.5 release.
+
+commit 6ea8e5000519865dd936cfe82d67efc7d107a28c
+Author: Bankim Bhavsar <bbhavsar@vmware.com>
+Date:   Tue Aug 19 11:23:02 2008 -0700
+
+    Add RegionEqual function for older XFree86 versions.
+    
+    Fixes bug : http://bugzilla.eng.vmware.com/show_bug.cgi?id=312853
+    
+    When we added AUTOPAINT_COLORKEY capability to our VMware video driver,
+    region functions were used to keep track of colorkey painting.
+    
+    REGION_EQUAL was one of them.
+    
+    Unfortunately REGION_EQUAL was not present in regionstr.h shipped with XFree86 version
+    4.3.0.
+    This version is used by TurboLinux 10; causing X server to crash while playing videos.
+    
+    REGION_EQUAL was added in revision 1.8 of regionstr.h and available for xfree86 version
+    4.3.99
+    onwards.
+    Reference:
+    http://cvsweb.xfree86.org/cvsweb/xc/programs/Xserver/include/regionstr.h.diff?r1=1.7&r2=1.8
+    
+    When I compiled the existing code(without my change), I see a warning was generated
+    indicating REGION_EQUAL is not present.
+    Too bad we missed it.
+    
+    This patch includes
+    1) Slightly modified version of miRegionEqual from miRegion.c
+    2) Some formating cleanup.
+
+commit 0576b87c27d3d885cc698a3cc013bcfa4021942c
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Jul 21 15:26:01 2008 -0700
+
+    Prepare for 10.16.4 release.
+
+commit ad8f17dec71632d0e606af1bea9432ece0bc97db
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Jul 21 15:23:50 2008 -0700
+
+    Video Overlay: Handle clipping correctly with AutoPaint colorkey.
+    
+    We recently added XV_AUTOPAINT_COLORKEY attribute to the X video driver
+    to enable applications like Real player that rely on this attribute to
+    display video frames in Linux guest.
+    
+    When this attribute is SET, we paint the colorkey on 1st frame and from
+    there on only when the video is moved.
+    
+    This introduced a bug 305202 with clipping.
+    
+    Consider a case when the video is playing, obscure the player window
+    with another window, without moving the player window, move the other
+    window away. The part of the window that was obscured didn't display
+    the video.
+    
+    With this patch instead of relying on the target rectangle, we use
+    the clipBoxes supplied in every frame.
+
+commit 71f1ca515cd1b3d92397682f4fcea120c392b26e
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Jul 18 14:03:09 2008 -0700
+
+    Prepare for 10.16.3
+    
+    Bump up version numbers.
+
+commit e7f404938b7ccd4c7e61c71c6c182ca8ee8d875f
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Jul 18 13:59:34 2008 -0700
+
+    Video Overlay: Add XV_AUTOPAINT_COLORKEY capability to the Xv extension of Linux guest driver.
+    
+    Applications use XV_AUTOPAINT_COLORKEY capability to let the driver handle the painting
+    of colorkey.
+    
+    Real Player assumes this capability as ON by default and hence prior to this patch videos
+    didn't play with Real player.
+    
+    With this patch:
+    a) If AUTOPAINT_COLORKEY is SET then the driver handles the painting of the colorkey.
+    Painting is done on the 1st frame and from there on only if the video frame moves.
+    
+    b) Adds UYVY fourcc format to keep it consistent with Windows SVGA driver and the host backends.
+    
+    c) Changes the default colorkey from a pungent GREEN to a darker shade.
+    Real Player sets this colorkey and it looks better when the video is moved around.
+
+commit 0705e7093e42f7a5ae909477150fd5bb416f8da0
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Wed Jul 2 21:32:44 2008 -0400
+
+    Trivial fix: Delete ASSERT() statement
+    
+    Delete the ASSERT() statement that got introduced in the previous check-in.
+
+commit f4b5158960c3402e18a0fcf0e0211b68b0f0f127
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Wed Jul 2 18:17:58 2008 -0400
+
+    Fix video overlay offscreen allocation bug
+    
+    When Kaffeine player stops a video, it sets the cleanup flag to FALSE and may
+    start playing the next video. In its present state the driver does not check or
+    clean up the offscreen area. This is a bug as the newer video might need more
+    offscreen space for its frame. The fix is to check for the offscreen frame size
+    in videoPlay and restart the stream if necessary.
+
 commit b53bb2ad4c6f6e378cbf82a98cac917736d62740
 Author: Vinay Bondhugula <vinayb@vmware.com>
 Date:   Thu Jun 12 17:34:30 2008 -0400
