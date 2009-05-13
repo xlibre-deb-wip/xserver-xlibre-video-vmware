@@ -1,3 +1,9 @@
+xserver-xorg-video-vmware (1:10.16.6-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 13 May 2009 07:41:29 +0200
+
 xserver-xorg-video-vmware (1:10.16.5-3) unstable; urgency=low
 
   * Upload to unstable.

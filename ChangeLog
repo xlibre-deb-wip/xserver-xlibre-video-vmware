@@ -1,3 +1,95 @@
+commit b4ea3052f843c2d1c285252cbf1bed2f4857f96c
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue May 12 16:48:43 2009 -0700
+
+    Bump for 10.16.6 release
+
+commit 8e15f6669ff2cb5bf4260ac87a481a4e38044b26
+Author: Micah Dowty <micah@vmware.com>
+Date:   Tue May 12 16:46:39 2009 -0700
+
+    Better cursor size limit and explanation
+    
+    Increase the cursor size limit to 64x64, and give a
+    better explanation of the host's cursor size limits.
+
+commit bfa3dfc27b05d4a2deff230f8241bd44f72fb7a0
+Author: Micah Dowty <micah@vmware.com>
+Date:   Tue May 12 16:46:00 2009 -0700
+
+    Allow cursor updates while unhidden
+    
+    This change just adds a flag to our hardware cursor,
+    telling Xorg that it doesn't need to hide the cursor
+    when updating its shape. This fixes the cursor flicker
+    in X11.
+
+commit dccc9376a4fb1cba9c35b7617989608497fca7be
+Author: Micah Dowty <micah@vmware.com>
+Date:   Tue May 12 16:45:29 2009 -0700
+
+    Unbreak vmwarectrl setres
+    
+    The vmwarectrl tool's "setres" command was unusable,
+    because it looks like someone added the settopology
+    test without updating the argument indices for setres.
+    This patch makes setres usable again.
+
+commit b7dbdd28764a8f3883833ab818a7b7314632b0b2
+Author: Micah Dowty <micah@vmware.com>
+Date:   Tue May 12 16:44:42 2009 -0700
+
+    Fix dynamic mode edge cases
+    
+    The VMware Xorg driver supports dynamic modelines that can be set from
+    userspace via an X extension. These are used to implement VM features
+    which need to automatically change the resolution of the guest OS.
+    
+    This driver implements the feature using two modelines.  The driver
+    would alternately update one mode then the other, so that in typical
+    usage one mode is current and the other is available for the next mode
+    switch.
+    
+    This usually worked, but there were many edge cases that could cause
+    this alternating pattern to get 'out of sync', so we'd end up changing
+    the resolution of the current video mode. This could end up putting
+    the X server in a state where the screen resolution has been changed,
+    but the hardware was never reprogrammed for the new resolution.
+    
+    This patch fixes the problem by explicitly searching for a dynamic
+    mode that isn't currently in use. We no longer rely on the alternating
+    pattern.
+
+commit cfe8793180ec633dd7a17d059ad882ef461ed1d9
+Author: Micah Dowty <micah@vmware.com>
+Date:   Tue May 12 16:43:13 2009 -0700
+
+    Update README
+    
+    Updates the copyright date, and replaces the rather out-of-date
+    2D documentation with a link to the updated 2D and 3D docs on
+    Source Forge.
+
+commit e3769142d80953d6da484eb979f5274c8a3abeb3
+Author: Shelley Gong <shelleygong@vmware.com>
+Date:   Thu Apr 16 13:28:47 2009 -0700
+
+    Automatically add modelines for the driver's built-in set of modes.
+    
+    The driver has had a built-in set of modes for a while, but there
+    was nothing adding modelines to back them up, causing initial modes
+    to be rejected at startup with certain Xorg versions.
+    
+    This change adds the actual modelines for sufficiently new versions
+    of the server (>= 1.2), as the necessary calls were only introduced
+    at that time.
+
+commit 3c223e8f7b03e2d7f8c31faeeeeb37030c461176
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:39:07 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
 commit 1bbef3aa7ab15ee93cd4cd47c3d484ac91f0440d
 Author: Philip Langdale <philipl@fido2.homeip.net>
 Date:   Tue Aug 19 11:23:44 2008 -0700
