@@ -1,3 +1,74 @@
+commit 382c25f53870da0db0ee74f343c20c312e6b03af
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Jul 20 18:03:47 2009 -0700
+
+    Bump for 10.16.7 Release.
+
+commit c2d9678431a40f6a15dc7f50690507cdda8d11e2
+Author: Micah Dowty <micah@vmware.com>
+Date:   Mon Jun 1 10:47:51 2009 -0700
+
+        An imperfect fix for Xinerama state changes without a mode change
+    
+        This patch improves behaviour for Xinerama state changes (via the
+        VMWARE_CTRL) extension that don't have an accompanying mode change.
+        This will be the case if a new Xinerama monitor layout has a bounding
+        box with an identical size to that of the previous layout.
+    
+        Prior to this patch, the behaviour was pretty bad. If you sent two
+        Xinerama states with the same bounding box, the second state would
+        be set as pending but no actual mode change would occur, because
+        the X server would already be in the right video mode. This means
+        that the pending mode stays pending.
+    
+        If another Xinerama state comes in after this, we would hit our
+        "Aborting due to existing pending state" error, and the new state
+        would be discarded. This means we'd drop the mode switch on the
+        floor, plus we'd lie to the client and say it worked.
+    
+        One example of the user-visible symptoms from this: The user has
+        four monitors of the same size. We'll call them A through D.
+        The VM goes into full-screen mode, and they set it to use screens
+        ABC. Now they switch to BCD. These have the same bounding box size,
+        so no mode change occurs and a topology is still pending. Now they
+        switch to monitors BC. This mode switch is dropped, so the guest
+        is still in the ABC topology and the mode is too wide for BC.
+    
+        This patch is an incomplete fix. If we're setting a new topology
+        with the same bounding box, we'll flush the Xinerama state
+        immediately since we know the mode switch will never occur. This
+        means we don't get stuck with xineramaNextState set when it
+        shouldn't be, and we don't have the problem with dropping
+        subsequent mode changes. We also do set the new Xinerama state,
+        so apps that query it will see the updated state immediately.
+    
+        But the fix isn't perfect- as far as I can tell, there's no way
+        to notify applications that the monitor layout changed without
+        a mode switch. So even though we've set the new topology, most
+        apps won't notice. There are ways we could hack around this,
+        but none of them are pretty.
+
+commit d10841493c4707f23f928d7580bc5bddb51d22a6
+Author: Bob Long <blong@vmware.com>
+Date:   Fri May 22 15:48:55 2009 -0700
+
+    Fix black screen after resume from hibernate.
+    
+    The root cause for the black screen and system lock up is
+    caused by not recovering the SVGA ID register after hibernation.
+    Incorrect ID register value will invalidate the FIFO memory start
+    register, and driver will not retrieve correct FIFO memory start
+    address and the busy read of svga FIFO sync register will lock up
+    the whole system.
+    
+    Currently SVGA Xorg driver does not have a kernel module to handle
+    the power management event, but Xorg will call driver provided
+    LeaveVT before shutting down system and call EnterVT after resuming
+    system from hibernation, so these two callback functions are good
+    entry points to save and restore the ID register value. This patch
+    saves the ID register value in LeaveVT and restores the value to
+    SVGA ID register in EnterVT.
+
 commit b4ea3052f843c2d1c285252cbf1bed2f4857f96c
 Author: Philip Langdale <philipl@fido2.homeip.net>
 Date:   Tue May 12 16:48:43 2009 -0700
