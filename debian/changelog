@@ -1,9 +1,9 @@
-xserver-xorg-video-vmware (1:10.16.7-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:10.16.7-1) unstable; urgency=low
 
   * New upstream release.
   * Add README.source, bump Standards-Version to 3.8.2.
 
- -- Brice Goglin <bgoglin@debian.org>  Thu, 30 Jul 2009 00:51:03 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Thu, 30 Jul 2009 00:52:36 +0200
 
 xserver-xorg-video-vmware (1:10.16.6-1) unstable; urgency=low
 
