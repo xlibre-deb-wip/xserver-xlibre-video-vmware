@@ -1,3 +1,35 @@
+commit 6c8fc7b280295b823675285ed78b0fb2365bcf07
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Sep 8 22:21:33 2009 -0700
+
+    Bump fo 10.16.8 Release
+
+commit e3e3d8d2488bd289660943e9038bdbe29e11cf77
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 7 11:12:13 2009 -0400
+
+    xf86-video-vmware: Remove unused .cvsignore file #23776
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit cce33db3f95c6f3c8537c782063b6ca9ad68f332
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:42 2009 +1000
+
+    vmware: change to using ABI version check
+
+commit 0fddce5511b761206bb5f59dcd17652f15bda5ef
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 14:11:59 2009 +1000
+
+    vmware: fix resource removal properly
+
+commit 4605e8d3a99ddcd75314051bd00b51d8ecee06a1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:41 2009 +1000
+
+    vmware: update for resources/RAC API removal
+
 commit 382c25f53870da0db0ee74f343c20c312e6b03af
 Author: Philip Langdale <philipl@fido2.homeip.net>
 Date:   Mon Jul 20 18:03:47 2009 -0700
