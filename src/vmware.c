@@ -85,7 +85,7 @@ char rcsId_vmware[] =
 #define VMWARE_DRIVER_NAME "vmware"
 #define VMWARE_MAJOR_VERSION	10
 #define VMWARE_MINOR_VERSION	16
-#define VMWARE_PATCHLEVEL	8
+#define VMWARE_PATCHLEVEL	9
 #define VMWARE_DRIVER_VERSION \
    (VMWARE_MAJOR_VERSION * 65536 + VMWARE_MINOR_VERSION * 256 + VMWARE_PATCHLEVEL)
 #define VMWARE_DRIVER_VERSION_STRING \
@@ -146,6 +146,13 @@ static PciChipsets VMWAREPciChipsets[] = {
     { -1,		       -1,		    RES_UNDEFINED }
 };
 
+#if HAVE_XORG_SERVER_1_7_0
+
+#define xf86LoaderReqSymLists(...) do {} while (0)
+#define LoaderRefSymLists(...) do {} while (0)
+
+#else
+
 static const char *vgahwSymbols[] = {
     "vgaHWGetHWRec",
     "vgaHWGetIOBase",
@@ -177,6 +184,8 @@ static const char *shadowfbSymbols[] = {
     "ShadowFBInit2",
     NULL
 };
+
+#endif /* HAVE_XORG_SERVER_1_7_0 */
 
 #ifdef XFree86LOADER
 static XF86ModuleVersionInfo vmwareVersRec = {
