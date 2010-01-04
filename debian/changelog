@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:10.16.8-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:10.16.9-1) UNRELEASED; urgency=low
 
   * New upstream release.
   * Bump Standards-Version to 3.8.3.
