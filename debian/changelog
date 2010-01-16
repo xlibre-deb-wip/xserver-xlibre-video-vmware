@@ -2,6 +2,7 @@ xserver-xorg-video-vmware (1:10.16.9-1) UNRELEASED; urgency=low
 
   [ Timo Aaltonen ]
   * New upstream release.
+    + fixes loading with server 1.7 (closes: #564922)
 
  -- Julien Cristau <jcristau@debian.org>  Sat, 16 Jan 2010 14:56:52 +0000
 
