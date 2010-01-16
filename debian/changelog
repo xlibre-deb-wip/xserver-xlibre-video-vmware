@@ -6,6 +6,7 @@ xserver-xorg-video-vmware (1:10.16.9-1) UNRELEASED; urgency=low
 
   [ Julien Cristau ]
   * Bump build-dep on xutils-dev for util-macros 1.4.
+  * Don't install a list of pci ids, the server doesn't use this anymore.
 
  -- Julien Cristau <jcristau@debian.org>  Sat, 16 Jan 2010 14:56:52 +0000
 
