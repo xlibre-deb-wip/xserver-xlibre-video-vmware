@@ -1,3 +1,10 @@
+xserver-xorg-video-vmware (1:10.16.9-2) UNRELEASED; urgency=low
+
+  * Rename the build directory to not include DEB_BUILD_GNU_TYPE for no
+    good reason.  Thanks, Colin Watson!
+
+ -- Julien Cristau <jcristau@debian.org>  Sat, 16 Jan 2010 16:47:32 +0000
+
 xserver-xorg-video-vmware (1:10.16.9-1) unstable; urgency=low
 
   [ Timo Aaltonen ]
