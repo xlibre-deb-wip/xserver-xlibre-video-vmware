@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:10.16.9-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:10.16.9-1) unstable; urgency=low
 
   [ Timo Aaltonen ]
   * New upstream release.
@@ -8,7 +8,7 @@ xserver-xorg-video-vmware (1:10.16.9-1) UNRELEASED; urgency=low
   * Bump build-dep on xutils-dev for util-macros 1.4.
   * Don't install a list of pci ids, the server doesn't use this anymore.
 
- -- Julien Cristau <jcristau@debian.org>  Sat, 16 Jan 2010 14:56:52 +0000
+ -- Julien Cristau <jcristau@debian.org>  Sat, 16 Jan 2010 15:52:44 +0000
 
 xserver-xorg-video-vmware (1:10.16.8-1) experimental; urgency=low
 
