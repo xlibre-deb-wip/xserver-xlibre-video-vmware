@@ -1,3 +1,102 @@
+commit cc77a36048863640fb1fa9f82b5b0dbf41326872
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Thu Mar 18 15:30:36 2010 +0100
+
+    Bump for 11.0.1 release.
+
+commit a5fb3698a033bfe7789641fd6719d8d4fb054201
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Tue Mar 9 08:37:11 2010 +0000
+
+    Rework chainloader code to check for vmwgfx userspace driver as well
+
+commit bf18be6f458a4612b2ebdd8d2b5894f8884891e4
+Author: Roland Scheidegger <sroland@vmware.com>
+Date:   Tue Mar 9 16:10:25 2010 +0100
+
+    fix a cursor refcounting bug, leading to segfaults
+    
+    this is similar to what xf86_use_hw_cursor() does, which is replaced by
+    vmwareUseHWCursor (otherwise, the refcount could reach zero and hence the
+    cursor deallocated while xf86CursorEnableDisableFBAccess() could still bring
+    it back to life from the saved cursor).
+    It is probably insane to do refcounting here, but this needs a xserver fix,
+    and even if that's fixed this fix here shouldn't hurt (though would be
+    unnecessary).
+
+commit 257614ae9bea54d6a46e4477496500a84853ee37
+Author: Roland Scheidegger <sroland@vmware.com>
+Date:   Tue Mar 9 16:03:59 2010 +0100
+
+    make DEBUG_LOGGING compile
+
+commit 29f6a2dca3e680908e938767256c9b995653ca7f
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Sun Mar 7 15:02:39 2010 +0000
+
+    Print text about none fatal error message with Fatal in it
+
+commit 204504861a2847734a04bd976accb0c730733523
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Fri Feb 26 16:27:17 2010 +0100
+
+    Don't hardcode the module version in the source
+    
+    As pointed out by Julien Cristau XORG_RELEASE_VERSION
+    gives us that info from configure.ac.
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 667263d9410bd0d5832cf08a2a28841fe6326b84
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Thu Feb 18 14:11:32 2010 +0100
+
+    Bump major for new chainloading driver
+
+commit 048fe839f0d761aeba95c324f14bdc5488e9e634
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Mon Feb 22 13:20:06 2010 +0100
+
+    Link to drm but on for the vmware chainloader driver
+
+commit 30964ffa31f4fdbffe563b7d7d20bfbf1ed22969
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Thu Feb 18 15:20:31 2010 +0100
+
+    Make sure that modinfo strings are unique
+
+commit 0f2b02d72e36dc6390c09d6adba13e4101bf3df8
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Thu Feb 11 23:18:37 2010 +0100
+
+    Add modinfo for vmware_drv.so
+
+commit c4f5bf8ea45b80c2ac4a5eec65ff58f148fb2807
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Thu Feb 11 22:04:53 2010 +0100
+
+    Add a chain loading module to load new vmwgfx driver if kernel module is loaded
+
+commit 0d9d1724dbe113dcc02736a8ca80ab540057cb5e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 14:13:42 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit e0d370ae5f307d96e9dd9384cc0ea66a0f6c06c1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 991830e39c34d0a4530a5c5023ec92cf0d7395b0
 Author: Michel Dänzer <daenzer@vmware.com>
 Date:   Tue Dec 29 17:53:35 2009 +0100
