@@ -6,6 +6,8 @@ xserver-xorg-video-vmware (1:11.0.1-1) UNRELEASED; urgency=low
 
   [ Cyril Brulebois ]
   * New upsteam release.
+  * Add libdrm-dev to Build-Depends, needed for the new chainloader
+    driver.
 
  -- Julien Cristau <jcristau@debian.org>  Sat, 16 Jan 2010 16:47:32 +0000
 
