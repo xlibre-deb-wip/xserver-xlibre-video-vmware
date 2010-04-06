@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:11.0.1-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:11.0.1-1) unstable; urgency=low
 
   [ Julien Cristau ]
   * Rename the build directory to not include DEB_BUILD_GNU_TYPE for no
@@ -10,7 +10,7 @@ xserver-xorg-video-vmware (1:11.0.1-1) UNRELEASED; urgency=low
     driver.
   * Add myself to Uploaders.
 
- -- Julien Cristau <jcristau@debian.org>  Sat, 16 Jan 2010 16:47:32 +0000
+ -- Cyril Brulebois <kibi@debian.org>  Tue, 06 Apr 2010 05:38:23 +0200
 
 xserver-xorg-video-vmware (1:10.16.9-1) unstable; urgency=low
 
