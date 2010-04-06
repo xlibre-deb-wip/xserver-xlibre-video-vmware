@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-vmware],
-        10.16.9,
+        11.0.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-vmware)
 
@@ -62,7 +62,7 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.1 xproto fontsproto $REQUIRED_MODULES])
-sdkdir=$(pkg-config --variable=sdkdir xorg-server)
+PKG_CHECK_MODULES(DRM, [libdrm])
 
 PKG_CHECK_EXISTS([xorg-server >= 1.1.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_1_0], 1,
