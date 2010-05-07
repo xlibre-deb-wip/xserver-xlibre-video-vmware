@@ -34,7 +34,5 @@ Description: X.Org X server -- VMware display driver
  .
  More information about X.Org can be found at:
  <URL:http://www.X.org>
- <URL:http://xorg.freedesktop.org>
- <URL:http://lists.freedesktop.org/mailman/listinfo/xorg>
  .
  This package is built from the X.org xf86-video-vmware driver module.
