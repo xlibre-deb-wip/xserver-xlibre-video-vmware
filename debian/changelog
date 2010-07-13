@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:11.0.1-2) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:11.0.1-2) unstable; urgency=low
 
   [ Julien Cristau ]
   * Update xsfbs, use new ${xviddriver:Depends} substvar.
@@ -7,7 +7,7 @@ xserver-xorg-video-vmware (1:11.0.1-2) UNRELEASED; urgency=low
   * Cherry-pick e647511e4b9b924b0617171c56b3bb485674b3ff from upstream
     to stop crashing the server on Xorg -configure (Closes: #579910).
 
- -- Julien Cristau <jcristau@debian.org>  Sat, 15 May 2010 16:32:18 +0200
+ -- Cyril Brulebois <kibi@debian.org>  Tue, 13 Jul 2010 17:57:43 +0200
 
 xserver-xorg-video-vmware (1:11.0.1-1) unstable; urgency=low
 
