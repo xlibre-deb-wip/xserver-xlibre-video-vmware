@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:11.0.2-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:11.0.2+git20101017.30ac6eaf-1) UNRELEASED; urgency=low
 
   * New upstream release.
   * Update debian/copyright.
