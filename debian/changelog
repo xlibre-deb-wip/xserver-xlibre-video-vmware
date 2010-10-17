@@ -3,6 +3,8 @@ xserver-xorg-video-vmware (1:11.0.2+git20101017.30ac6eaf-1) UNRELEASED; urgency=
   * New upstream release.
   * Update debian/copyright.
   * Bump xutils-dev build-dep for util-macros 1.8.
+  * No longer require libdrm-dev on hurd-i386, since upstream now supports
+    building and running without libdrm.
 
  -- Cyril Brulebois <kibi@debian.org>  Sun, 17 Oct 2010 04:20:16 +0200
 
