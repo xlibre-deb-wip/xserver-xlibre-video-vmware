@@ -1,6 +1,7 @@
 xserver-xorg-video-vmware (1:11.0.2-1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * Update debian/copyright.
 
  -- Cyril Brulebois <kibi@debian.org>  Sun, 17 Oct 2010 04:20:16 +0200
 
