@@ -1,6 +1,7 @@
 xserver-xorg-video-vmware (1:11.0.2-1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * Bump xutils-dev requirement for new util-macros.
 
  -- Robert Hooker <sarvatt@ubuntu.com>  Mon, 01 Nov 2010 15:34:43 -0400
 
