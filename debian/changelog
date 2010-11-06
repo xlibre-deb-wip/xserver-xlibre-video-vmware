@@ -7,6 +7,7 @@ xserver-xorg-video-vmware (1:11.0.2-1) UNRELEASED; urgency=low
   [ Cyril Brulebois ]
   * Update debian/copyright.
   * Switch from --list-missing to --fail-missing for additional safety.
+  * Exclude .la files accordingly.
 
  -- Robert Hooker <sarvatt@ubuntu.com>  Mon, 01 Nov 2010 15:34:43 -0400
 
