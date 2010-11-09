@@ -4,6 +4,8 @@ xserver-xorg-video-vmware (1:11.0.3-1) UNRELEASED; urgency=low
   * No longer require libdrm-dev on hurd-i386, since upstream now supports
     building and running without libdrm.
   * Add build-dep on libx11-dev, needed for vmwarectrl.
+  * Pass --enable-vmwarectrl-client to enable the vmwarectrl unit test
+    client tool.
 
  -- Cyril Brulebois <kibi@debian.org>  Tue, 09 Nov 2010 16:32:14 +0100
 

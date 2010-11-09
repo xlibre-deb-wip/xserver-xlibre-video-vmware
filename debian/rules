@@ -42,6 +42,7 @@ build/Makefile: configure
 	cd build && \
 	../configure --prefix=/usr --mandir=\$${prefix}/share/man \
 	             --infodir=\$${prefix}/share/info $(confflags) \
+	             --enable-vmwarectrl-client \
 	             CFLAGS="$(CFLAGS)" 
 
 build: build-stamp
