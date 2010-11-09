@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:11.0.3-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:11.0.3-1) experimental; urgency=low
 
   * New upstream release.
   * No longer require libdrm-dev on hurd-i386, since upstream now supports
@@ -8,7 +8,7 @@ xserver-xorg-video-vmware (1:11.0.3-1) UNRELEASED; urgency=low
     client tool.
   * Add usr/bin/vmwarectrl to .install file accordingly.
 
- -- Cyril Brulebois <kibi@debian.org>  Tue, 09 Nov 2010 16:32:14 +0100
+ -- Cyril Brulebois <kibi@debian.org>  Tue, 09 Nov 2010 17:47:08 +0100
 
 xserver-xorg-video-vmware (1:11.0.2-1) experimental; urgency=low
 
