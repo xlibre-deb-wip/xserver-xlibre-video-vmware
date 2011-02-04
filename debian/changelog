@@ -8,6 +8,7 @@ xserver-xorg-video-vmware (1:11.0.3-2) UNRELEASED; urgency=low
   * Remove xsfbs accordingly.
   * Update Uploaders list. Thanks, David & Brice!
   * Remove long obsolete Replaces/Conflicts.
+  * Wrap Depends/Provides.
 
  -- Cyril Brulebois <kibi@debian.org>  Fri, 04 Feb 2011 08:52:30 +0100
 

@@ -24,8 +24,12 @@ Vcs-Browser: http://git.debian.org/?p=pkg-xorg/driver/xserver-xorg-video-vmware.
 
 Package: xserver-xorg-video-vmware
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${xviddriver:Depends}
-Provides: ${xviddriver:Provides}
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ ${xviddriver:Depends},
+Provides:
+ ${xviddriver:Provides}
 Description: X.Org X server -- VMware display driver
  This package provides the driver for VMware client sessions, i.e. if Linux
  is running inside a VMware session.
