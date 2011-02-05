@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:11.0.3-2) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:11.0.3-2) unstable; urgency=low
 
   * Switch to dh:
     - Use debhelper 8.
@@ -12,7 +12,7 @@ xserver-xorg-video-vmware (1:11.0.3-2) UNRELEASED; urgency=low
   * Bump Standards-Version to 3.9.1 (no changes needed).
   * Add quilt build-dep for future use.
 
- -- Cyril Brulebois <kibi@debian.org>  Fri, 04 Feb 2011 08:52:30 +0100
+ -- Cyril Brulebois <kibi@debian.org>  Sat, 05 Feb 2011 14:59:54 +0100
 
 xserver-xorg-video-vmware (1:11.0.3-1) experimental; urgency=low
 
