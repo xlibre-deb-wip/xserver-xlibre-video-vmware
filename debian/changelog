@@ -1,3 +1,10 @@
+xserver-xorg-video-vmware (1:11.0.3-2~bpo60+1) squeeze-backports; urgency=low
+
+  * Rebuild for squeeze-backports.
+  * Build against Xserver 1.10.
+
+ -- Cyril Brulebois <kibi@debian.org>  Sun, 14 Aug 2011 16:20:21 +0200
+
 xserver-xorg-video-vmware (1:11.0.3-2) unstable; urgency=low
 
   * Switch to dh:
