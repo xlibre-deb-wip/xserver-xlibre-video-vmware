@@ -217,13 +217,15 @@ static XF86ModuleVersionInfo vmwlegacyVersRec = {
 typedef enum {
     OPTION_HW_CURSOR,
     OPTION_XINERAMA,
-    OPTION_STATIC_XINERAMA
+    OPTION_STATIC_XINERAMA,
+    OPTION_DEFAULT_MODE,
 } VMWAREOpts;
 
 static const OptionInfoRec VMWAREOptions[] = {
     { OPTION_HW_CURSOR, "HWcursor",     OPTV_BOOLEAN,   {0},    FALSE },
     { OPTION_XINERAMA,  "Xinerama",     OPTV_BOOLEAN,   {0},    FALSE },
     { OPTION_STATIC_XINERAMA, "StaticXinerama", OPTV_STRING, {0}, FALSE },
+    { OPTION_DEFAULT_MODE, "AddDefaultMode", OPTV_BOOLEAN,   {0},    FALSE },
     { -1,               NULL,           OPTV_NONE,      {0},    FALSE }
 };
 
@@ -607,6 +609,8 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     int i;
     ClockRange* clockRanges;
     IOADDRESS domainIOBase = 0;
+    uint32 width = 0, height = 0;
+    Bool defaultMode;
 
 #ifndef BUILD_FOR_420
     domainIOBase = pScrn->domainIOBase;
@@ -922,6 +926,17 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     pScrn->videoRam = pVMWARE->videoRam / 1024;
     pScrn->memPhysBase = pVMWARE->memPhysBase;
 
+    from = X_DEFAULT;
+    defaultMode = TRUE;
+    if (xf86GetOptValBool(options, OPTION_DEFAULT_MODE, &defaultMode)) {
+        from = X_CONFIG;
+    }
+    width = vmwareReadReg(pVMWARE, SVGA_REG_WIDTH);
+    height = vmwareReadReg(pVMWARE, SVGA_REG_HEIGHT);
+    xf86DrvMsg(pScrn->scrnIndex, from,
+	       "Will %sset up a driver mode with dimensions %dx%d.\n",
+	       defaultMode ? "" : "not ", width, height);
+
     free(options);
 
     {
@@ -949,18 +964,19 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     clockRanges->doubleScanAllowed = FALSE;
     clockRanges->ClockMulFactor = 1;
     clockRanges->ClockDivFactor = 1;
-   
-    /*
-     * Get the default supported modelines
-     */
-    vmwareGetSupportedModelines(&pScrn->monitor->Modes);
+
+    if (defaultMode) {
+	vmwareAddDefaultMode(pScrn, width, height);
+    }
 
     i = xf86ValidateModes(pScrn, pScrn->monitor->Modes, pScrn->display->modes,
-                          clockRanges, NULL, 256, pVMWARE->maxWidth, 32 * 32,
+                          clockRanges, NULL, 256, pVMWARE->maxWidth,
+                          pVMWARE->bitsPerPixel * 1,
                           128, pVMWARE->maxHeight,
                           pScrn->display->virtualX, pScrn->display->virtualY,
                           pVMWARE->videoRam,
-                          LOOKUP_BEST_REFRESH);
+                          LOOKUP_BEST_REFRESH | LOOKUP_OPTIONAL_TOLERANCES);
+
     if (i == -1) {
         VMWAREFreeRec(pScrn);
         return FALSE;
@@ -971,8 +987,13 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         VMWAREFreeRec(pScrn);
         return FALSE;
     }
-    xf86SetCrtcForModes(pScrn, INTERLACE_HALVE_V);
+
     pScrn->currentMode = pScrn->modes;
+    pScrn->virtualX = pScrn->modes->HDisplay;
+    pScrn->virtualY = pScrn->modes->VDisplay;
+
+    xf86SetCrtcForModes(pScrn, INTERLACE_HALVE_V);
+
     xf86PrintModes(pScrn);
     xf86SetDpi(pScrn, 0, 0);
     if (!xf86LoadSubModule(pScrn, "fb") ||
@@ -1001,24 +1022,24 @@ VMWAREMapMem(ScrnInfoPtr pScrn)
 #if XSERVER_LIBPCIACCESS
     int err;
     struct pci_device *const device = pVMWARE->PciInfo;
+    void *fbBase;
 #endif
 
 #if XSERVER_LIBPCIACCESS
    err = pci_device_map_range(device,
                               pVMWARE->memPhysBase,
                               pVMWARE->videoRam,
-                              PCI_DEV_MAP_FLAG_WRITABLE | 
-                              PCI_DEV_MAP_FLAG_WRITE_COMBINE,
-                              (void **) &pVMWARE->FbBase);
+                              PCI_DEV_MAP_FLAG_WRITABLE,
+			      &fbBase);
    if (err) {
        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                   "Unable to map frame buffer BAR. %s (%d)\n",
                   strerror (err), err);
        return FALSE;
    }
-
+   pVMWARE->FbBase = fbBase;
 #else
-    pVMWARE->FbBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
+    pVMWARE->FbBase = xf86MapPciMem(pScrn->scrnIndex, 0,
                                     pVMWARE->PciTag,
                                     pVMWARE->memPhysBase,
                                     pVMWARE->videoRam);
@@ -1108,7 +1129,12 @@ VMWARERestoreRegs(ScrnInfoPtr pScrn, VMWARERegPtr vmwareReg)
                            vmwareReg->svga_reg_cursor_on);
         }
     } else {
-        vmwareWriteReg(pVMWARE, SVGA_REG_ENABLE, vmwareReg->svga_reg_enable);
+        vmwareWriteReg(pVMWARE, SVGA_REG_ID, vmwareReg->svga_reg_id);
+        vmwareWriteReg(pVMWARE, SVGA_REG_WIDTH, vmwareReg->svga_reg_width);
+        vmwareWriteReg(pVMWARE, SVGA_REG_HEIGHT, vmwareReg->svga_reg_height);
+        vmwareWriteReg(pVMWARE, SVGA_REG_BITS_PER_PIXEL,
+                       vmwareReg->svga_reg_bits_per_pixel);
+	vmwareWriteReg(pVMWARE, SVGA_REG_ENABLE, vmwareReg->svga_reg_enable);
     }
 }
 
@@ -1312,6 +1338,7 @@ VMWAREInitFIFO(ScrnInfoPtr pScrn)
 #if XSERVER_LIBPCIACCESS
     struct pci_device *const device = pVMWARE->PciInfo;
     int err;
+    void *mmioVirtBase;
 #endif
     CARD32* vmwareFIFO;
     Bool extendedFifo;
@@ -1325,13 +1352,14 @@ VMWAREInitFIFO(ScrnInfoPtr pScrn)
     err = pci_device_map_range(device, pVMWARE->mmioPhysBase,
                                pVMWARE->mmioSize,
                                PCI_DEV_MAP_FLAG_WRITABLE,
-                               (void **) &pVMWARE->mmioVirtBase);
+                               &mmioVirtBase);
     if (err) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                    "Unable to map mmio BAR. %s (%d)\n",
                    strerror (err), err);
         return;
     }
+    pVMWARE->mmioVirtBase = mmioVirtBase;
 #else
     pVMWARE->mmioVirtBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
                                           pVMWARE->PciTag,
@@ -1599,10 +1627,10 @@ VMWareDriverFunc(ScrnInfoPtr pScrn,
        * keep the DPI constant.
        */
       if (modemm && modemm->mode) {
-	  modemm->mmWidth *= (modemm->mode->HDisplay * VMWARE_INCHTOMM +
-			      pScrn->xDpi / 2)  / pScrn->xDpi;
-	  modemm->mmHeight *= (modemm->mode->VDisplay * VMWARE_INCHTOMM +
-			       pScrn->yDpi / 2) / pScrn->yDpi;
+	  modemm->mmWidth = (modemm->mode->HDisplay * VMWARE_INCHTOMM +
+			     pScrn->xDpi / 2)  / pScrn->xDpi;
+	  modemm->mmHeight = (modemm->mode->VDisplay * VMWARE_INCHTOMM +
+			      pScrn->yDpi / 2) / pScrn->yDpi;
       }
       return TRUE;
    default:

@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-vmware],
-        [11.0.3],
+        [11.0.99.901],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-vmware])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -80,10 +80,6 @@ PKG_CHECK_MODULES(LIBDRM,
 PKG_CHECK_EXISTS([xorg-server >= 1.1.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_1_0], 1,
                  [Has version 1.1.0 or greater of the Xserver])])
-
-PKG_CHECK_EXISTS([xorg-server >= 1.0.99.901],
-                 [AC_DEFINE([HAVE_XORG_SERVER_1_0_99_901], 1,
-                 [Has version 1.0.99.901 or greater of the Xserver])])
 
 PKG_CHECK_EXISTS([xorg-server >= 1.2.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_2_0], 1,

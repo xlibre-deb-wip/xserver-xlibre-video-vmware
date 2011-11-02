@@ -23,9 +23,6 @@
  *
  **********************************************************/
 
-#include <xorg-server.h>
-#include <xf86.h>
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -33,6 +30,9 @@
 #ifdef HAVE_LIBDRM
 #include <xf86drm.h>
 #endif
+
+#include <xorg-server.h>
+#include <xf86.h>
 
 #ifndef HAVE_XORG_SERVER_1_5_0
 #include <xf86_ansic.h>
@@ -175,7 +175,6 @@ vmware_chain_module(pointer opts)
     GDevPtr *gdevs;
     GDevPtr gdev;
     int i;
-    pointer ret;
 
     vmware_devices = xf86MatchDevice(VMWARE_DRIVER_NAME, &gdevs);
     vmwgfx_devices = xf86MatchDevice(VMWGFX_DRIVER_NAME, NULL);
