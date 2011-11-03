@@ -1,3 +1,230 @@
+commit de70a1d0cb79dad9e52baa43306264db80a163da
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Oct 5 13:33:17 2011 +0200
+
+    xf86-video-vmware 11.0.99.901
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 26845eb54a15d43f09288a87c5f74beac8fb6ec7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 27 19:31:22 2011 -0700
+
+    Use dixLookupWindow instead of LookupWindow on Xorg 1.5 & later
+    
+    The LookupWindow function was deprecated in xserver commit ed75b056511ccb4
+    and removed during the Xorg 1.11 merge window by commit 82a8677d9175732.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit b5438423ad29338429321cd29118a66b715cdcac
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Sep 25 14:06:47 2011 -0400
+
+    Fix wrong-sized swaps
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 4ae8aac35b7209576eaeb64347470d3145b27832
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Jul 4 15:39:02 2011 +0200
+
+    vmwlegacy: Fix server termination due to pitch inconsistency.
+    
+    Don't require a 32*32 bit pitch alignment when validating modes, since the
+    requested virtual pitch (pVMWARE->maxWidth*bpp) must be a multiple of that
+    alignment. If not, the server will terminate with a cryptic error message.
+    
+    This is only for validating modes. The driver will adjust the pitch to the
+    host requirement when a mode is set anyway, and hopefully the host won't
+    require a pitch it doesn't support.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 0142bb8d10edb153c9ce79a2ea3ff92a7fb15ac5
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Mar 30 12:37:24 2011 +0200
+
+    vmwlegacy: Don't prune modes based on the virtual size of the default mode
+    
+    We might be pruning modes based on the virtual size of the default mode in
+    some situations. Avoid this by allowing a virtual size equal to the device
+    max size, unless the user has requested something else.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Alan Hourihane <alanh@vmware.com>
+
+commit 04297d435b87e3d04a427ac8ef33d314727220e6
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Mar 30 12:22:43 2011 +0200
+
+    vmwlegacy: Fix up default mode VRefresh anc Clock calculation
+    
+    The VRefresh value was a factor 1000 too high.
+    Calculate clock based on vrefresh and resolution.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Alan Hourihane <alanh@vmware.com>
+
+commit c5ca599361c87ec816db92d4f9841143f8601934
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Mar 30 11:01:06 2011 +0200
+
+    vmwlegacy: Fix a bug in screen dimension calculation
+    
+    This bug resulted in incorrect screen dimensions and DPI being calculated
+    in some circumstances, leading to among other things bad aspect ratios in xine.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit c02d5977015983473a9bbae97ec65ce70a5faa3b
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Tue Mar 29 13:03:39 2011 +0200
+
+    vmwlegacy: Make sure we draw the colorkey to the right drawable
+    
+    Don't draw the colorkey to the screen drawable, but to the video drawable
+    when possible.
+    
+    Also change the Xv API/ABI test to use the builtin ABI version
+    functions.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Michel Dänzer <daenzer@vmware.com>
+
+commit b234d7d6925b480a9c4fe23e5100e6fe7e5c0eac
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Tue Mar 29 11:18:24 2011 +0200
+
+    vmwlegacy: Silence a number of warnings
+    
+    This potentially also fixes a use of an uninitialized pointer value, which
+    may cause OOM or segfaults.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Michel Dänzer <daenzer@vmware.com>
+
+commit cdb04224db69a6b3beb66c99879e20917b8b0fb2
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Fri Mar 25 19:17:00 2011 +0100
+
+    vmwlegacy: Fix segfault and setup of initial mode.
+    
+    The fact that modes were added without names caused segfaults on older
+    X servers. At least up to and including Xserver 1.4.
+    
+    Also, for some reason, at least Xserver 1.4 insists on setting the first mode
+    in the modelist, even if we set another mode as the current one.
+    
+    Work around this by inserting a new mode with the current screen dimensions,
+    and add that modename last to the array of display requested mode names.
+    This means that if none of the previous mode names are found, we will at least
+    find the newly inserted mode.
+    
+    Also, if there are no requested mode names at all, the driver previously
+    chose the largest mode that fit the timings. Now we will, in that case,
+    always select the newly inserted mode and thus not change resolution unless
+    specified.
+    
+    Also add an option to not add this default mode. The option
+    "AddDefaultMode" is true by default.
+    
+    Finally when we restore registers at exit and VT switch, make sure we
+    reprogram the initial width, height and bpp for the next time we start a
+    server.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 9a8f0af8782fd5e9de2d71dfa86fad1d48d52b64
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Mar 3 09:47:48 2011 +0100
+
+    Remove unused variable
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit c208a5380b20f910ab49433abc0d39dce6bb5528
+Author: Alan Hourihane <alanh@vmware.com>
+Date:   Wed Feb 16 18:53:14 2011 +0100
+
+    vmwlegacy: Fix mode lookup
+    
+    In situations where we have trouble finding a specified mode,
+    use the resolution given by the width and height device registers.
+    
+    Signed-off-by: Alan Hourihane <alanh@vmware.com>
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 2e5001b7e93c63c2cd25d7d8ebdee8a420c13b96
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Feb 16 18:47:02 2011 +0100
+
+    vmwlegacy: Add a missing include
+    
+    The test for Xserver >= 1.2 in the affected file was always failing.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Michel DÃ¤nzer <daenzer@vmware.com>
+
+commit b3c244ebd7899a66aa401d2d7b0ddc66ee56e6d7
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Feb 16 17:29:47 2011 +0100
+
+    vmwlegacy: Don't attempt to call RRSendConfigNotify on Xservers < 1.2
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Alan Hourihane <alanh@vmware.com>
+    Reviewed-by: Michel DÃ¤nzer <daenzer@vmware.com>
+
+commit eacfa46ada8562bfb15d3fc6a8af272d88036d2f
+Author: Michel DÃ¤nzer <daenzer@vmware.com>
+Date:   Thu Jan 27 11:09:39 2011 +0100
+
+    vmwlegacy: Send ConfigureNotify events on Xinerama state changes with no mode change
+    
+    Signed-off-by: Michel Dänzer <daenzer@vmware.com>
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit cc66e4a49a4a9ac90940d7866db5bc7621cb7e16
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Jan 27 11:02:44 2011 +0100
+
+    Fix crosscompile build for older Xservers v2
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit d1ac343b8894a9b8a34c1dcf4b6aeb57239034c0
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Fri Jan 21 23:07:10 2011 +0100
+
+    Revert "Fix crosscompile build for older Xservers"
+    
+    This reverts commit 16e16390385d890b3666485a40369f4c690d5033.
+    
+    The fix was bogus as pointed out by Cyril Bruleboid <kibi@debian.org>, and
+    Gaetan Nadon <memsize@videotron.ca>
+
+commit 16e16390385d890b3666485a40369f4c690d5033
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Jan 13 13:17:17 2011 +0100
+
+    Fix crosscompile build for older Xservers
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 5b30df47117bc65fd5f14667671041428e1d00b5
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Jan 13 12:52:14 2011 +0100
+
+    vmwlegacy: Remove Write-Combining setups
+    
+    The virtual CPUs doesn't support it anyway.
+    Once suggested by Michel Daenzer.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
 commit 8f8f71f0075d9d5cbbfca93425462ba03c5b8046
 Author: Thomas Hellstrom <thellstrom@vmware.com>
 Date:   Tue Nov 9 14:31:30 2010 +0100

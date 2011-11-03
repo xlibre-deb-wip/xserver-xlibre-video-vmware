@@ -1,3 +1,11 @@
+xserver-xorg-video-vmware (1:11.0.99.901-1) UNRELEASED; urgency=low
+
+  * New upstream release candidate.
+  * It's probably not bug-free, but that's what release candidates and
+    unstable users are for. ;-)
+
+ -- Cyril Brulebois <kibi@debian.org>  Thu, 03 Nov 2011 01:01:21 +0100
+
 xserver-xorg-video-vmware (1:11.0.3-3) unstable; urgency=high
 
   * Cherry-pick from upstream: Use dixLookupWindow instead of LookupWindow on
