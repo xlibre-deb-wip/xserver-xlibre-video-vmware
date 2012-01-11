@@ -299,7 +299,7 @@ vmwareWriteReg(VMWAREPtr pVMWARE, int index, CARD32 value)
 void
 vmwareWriteWordToFIFO(VMWAREPtr pVMWARE, CARD32 value)
 {
-    CARD32* vmwareFIFO = pVMWARE->vmwareFIFO;
+    volatile CARD32* vmwareFIFO = pVMWARE->vmwareFIFO;
 
     /* Need to sync? */
     if ((vmwareFIFO[SVGA_FIFO_NEXT_CMD] + sizeof(CARD32) == vmwareFIFO[SVGA_FIFO_STOP])
@@ -310,6 +310,9 @@ vmwareWriteWordToFIFO(VMWAREPtr pVMWARE, CARD32 value)
     }
 
     vmwareFIFO[vmwareFIFO[SVGA_FIFO_NEXT_CMD] / sizeof(CARD32)] = value;
+
+    write_mem_barrier();
+
     if(vmwareFIFO[SVGA_FIFO_NEXT_CMD] == vmwareFIFO[SVGA_FIFO_MAX] -
        sizeof(CARD32)) {
         vmwareFIFO[SVGA_FIFO_NEXT_CMD] = vmwareFIFO[SVGA_FIFO_MIN];
@@ -612,8 +615,10 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     uint32 width = 0, height = 0;
     Bool defaultMode;
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 #ifndef BUILD_FOR_420
     domainIOBase = pScrn->domainIOBase;
+#endif
 #endif
 
     if (flags & PROBE_DETECT) {
@@ -1340,7 +1345,7 @@ VMWAREInitFIFO(ScrnInfoPtr pScrn)
     int err;
     void *mmioVirtBase;
 #endif
-    CARD32* vmwareFIFO;
+    volatile CARD32* vmwareFIFO;
     Bool extendedFifo;
     int min;
 
@@ -1370,6 +1375,9 @@ VMWAREInitFIFO(ScrnInfoPtr pScrn)
 
     extendedFifo = pVMWARE->vmwareCapability & SVGA_CAP_EXTENDED_FIFO;
     min = extendedFifo ? vmwareReadReg(pVMWARE, SVGA_REG_MEM_REGS) : 4;
+
+    vmwareWaitForFB(pVMWARE);
+    vmwareWriteReg(pVMWARE, SVGA_REG_CONFIG_DONE, 0);
 
     vmwareFIFO[SVGA_FIFO_MIN] = min * sizeof(CARD32);
     vmwareFIFO[SVGA_FIFO_MAX] = pVMWARE->mmioSize;
