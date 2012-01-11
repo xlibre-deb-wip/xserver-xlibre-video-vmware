@@ -1,3 +1,56 @@
+commit 5d7242154c392b2df57476c01f5f0a7a9bce3d8b
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Jan 11 13:15:59 2012 +0100
+
+    Bump package version to 11.1.0 for release
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit abf9cb75630cb27bb4741d194cb23014fe3d09b1
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Nov 17 16:38:22 2011 +0100
+
+    vmwlegacy: Fix up Xinerama / panoramiX replies.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit be23efbc91f47a6a34fbe24f167ee29fdf58f541
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Nov 16 10:23:10 2011 +0100
+
+    vmwlegacy: Fix device fifo communication
+    
+    This fixes two issues with the device fifo communication:
+    1) Idle the fifo before initializing it. If the fifo is already up and
+    processing data due to an uncleanly shut down server, and init could
+    otherwise confuse the device.
+    
+    2) Mark fifo memory volatile when writing to it and make sure commands
+    are written before telling the device they are available.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 4c08c2600936efeedb1a33436876ba82a11218e7
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Oct 7 13:15:11 2011 -0700
+
+    Build fix for ABI version 12
+    
+    This results in the vmware driver assuming there is only one PCI domain,
+    which I think is true for everywhere this is expected to run anyway.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 208ccbc7179b40a570a5943e325dd22740a67577
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Oct 7 13:10:59 2011 -0700
+
+    Fix build failures resulting from changes to the swaps and swapl macros in recent xorg-server
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit de70a1d0cb79dad9e52baa43306264db80a163da
 Author: Thomas Hellstrom <thellstrom@vmware.com>
 Date:   Wed Oct 5 13:33:17 2011 +0200
