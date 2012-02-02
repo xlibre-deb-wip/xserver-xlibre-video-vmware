@@ -3,6 +3,8 @@ xserver-xorg-video-vmware (1:11.99.901-0ubuntu1) precise; urgency=low
   * New upstream release candidate.
   * Build with XA, enabling accelerated virtualized passthrough.
   * Add libxatracker-dev to build deps.
+  * Add 100-vmwgfx-avoid-including-a-library-header.patch, cherry-pick
+    from upstream commit 8ff19c2b to fix the build.
 
  -- Robert Hooker <sarvatt@ubuntu.com>  Thu, 02 Feb 2012 15:40:22 -0500
 
