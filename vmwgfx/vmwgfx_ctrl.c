@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 by VMware, Inc.
+ * Copyright 2006-2011 by VMware, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,24 +32,15 @@
  *      allows X clients to communicate with the driver.
  */
 
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
+#include <xorg-server.h>
 #include "dixstruct.h"
 #include "extnsionst.h"
-#include "randrstr.h"
 #include <X11/X.h>
 #include <X11/extensions/panoramiXproto.h>
 
-#include "vmware.h"
 #include "vmwarectrlproto.h"
-
-#ifndef HAVE_XORG_SERVER_1_5_0
-#include <xf86_ansic.h>
-#include <xf86_libc.h>
-#endif
+#include "vmwgfx_driver.h"
+#include "vmwgfx_drmi.h"
 
 /*
  *----------------------------------------------------------------------------
@@ -82,10 +73,10 @@ VMwareCtrlQueryVersion(ClientPtr client)
    rep.majorVersion = VMWARE_CTRL_MAJOR_VERSION;
    rep.minorVersion = VMWARE_CTRL_MINOR_VERSION;
    if (client->swapped) {
-      _swaps(&rep.sequenceNumber, n);
-      _swapl(&rep.length, n);
-      _swapl(&rep.majorVersion, n);
-      _swapl(&rep.minorVersion, n);
+      swaps(&rep.sequenceNumber, n);
+      swapl(&rep.length, n);
+      swapl(&rep.majorVersion, n);
+      swapl(&rep.minorVersion, n);
    }
    WriteToClient(client, sizeof(xVMwareCtrlQueryVersionReply), (char *)&rep);
 
@@ -116,64 +107,19 @@ VMwareCtrlQueryVersion(ClientPtr client)
 static Bool
 VMwareCtrlDoSetRes(ScrnInfoPtr pScrn,
                    CARD32 x,
-                   CARD32 y,
-                   Bool resetXinerama)
+                   CARD32 y)
 {
-   int modeIndex;
-   DisplayModePtr mode;
-   VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
+   modesettingPtr ms = modesettingPTR(pScrn);
+   struct drm_vmw_rect rect;
+   int ret;
 
-   if (pScrn && pScrn->modes) {
-      VmwareLog(("DoSetRes: %d %d\n", x, y));
+   rect.x = 0;
+   rect.y = 0;
+   rect.w = x;
+   rect.h = y;
 
-      if (resetXinerama) {
-         free(pVMWARE->xineramaNextState);
-         pVMWARE->xineramaNextState = NULL;
-         pVMWARE->xineramaNextNumOutputs = 0;
-      }
-
-      /*
-       * Don't resize larger than possible but don't
-       * return an X Error either.
-       */
-      if (x > pVMWARE->maxWidth ||
-          y > pVMWARE->maxHeight) {
-         return TRUE;
-      }
-
-      /*
-       * Find an dynamic mode which isn't current, and replace it with
-       * the requested mode. Normally this will cause us to alternate
-       * between two dynamic mode slots, but there are some important
-       * corner cases to consider. For example, adding the same mode
-       * multiple times, adding a mode that we never switch to, or
-       * adding a mode which is a duplicate of a built-in mode. The
-       * best way to handle all of these cases is to directly test the
-       * dynamic mode against the current mode pointer for this
-       * screen.
-       */
-
-      for (modeIndex = 0; modeIndex < NUM_DYN_MODES; modeIndex++) {
-         /*
-          * Initialise the dynamic mode if it hasn't been used before.
-          */
-         if (!pVMWARE->dynModes[modeIndex]) {
-            pVMWARE->dynModes[modeIndex] = VMWAREAddDisplayMode(pScrn, "DynMode", 1, 1);
-         }
-
-         mode = pVMWARE->dynModes[modeIndex];
-         if (mode != pScrn->currentMode) {
-            break;
-         }
-      }
-
-      mode->HDisplay = x;
-      mode->VDisplay = y;
-
-      return TRUE;
-   } else {
-      return FALSE;
-   }
+   ret = vmwgfx_update_gui_layout(ms->fd, 1, &rect);
+   return (ret == 0);
 }
 
 
@@ -214,7 +160,7 @@ VMwareCtrlSetRes(ClientPtr client)
       return BadMatch;
    }
 
-   if (!VMwareCtrlDoSetRes(pScrn, stuff->x, stuff->y, TRUE)) {
+   if (!VMwareCtrlDoSetRes(pScrn, stuff->x, stuff->y)) {
       return BadValue;
    }
 
@@ -225,11 +171,11 @@ VMwareCtrlSetRes(ClientPtr client)
    rep.x = stuff->x;
    rep.y = stuff->y;
    if (client->swapped) {
-      _swaps(&rep.sequenceNumber, n);
-      _swapl(&rep.length, n);
-      _swapl(&rep.screen, n);
-      _swapl(&rep.x, n);
-      _swapl(&rep.y, n);
+      swaps(&rep.sequenceNumber, n);
+      swapl(&rep.length, n);
+      swapl(&rep.screen, n);
+      swapl(&rep.x, n);
+      swapl(&rep.y, n);
    }
    WriteToClient(client, sizeof(xVMwareCtrlSetResReply), (char *)&rep);
 
@@ -261,73 +207,26 @@ VMwareCtrlDoSetTopology(ScrnInfoPtr pScrn,
                         xXineramaScreenInfo *extents,
                         unsigned long number)
 {
-   VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
+   modesettingPtr ms = modesettingPTR(pScrn);
+   struct drm_vmw_rect *rects;
+   int i;
+   int ret;
 
-   if (pVMWARE && pVMWARE->xinerama) { 
-      VMWAREXineramaPtr xineramaState;
-      short maxX = 0;
-      short maxY = 0;
-      size_t i;
-
-      if (pVMWARE->xineramaNextState) {
-         VmwareLog(("DoSetTopology: Aborting due to existing pending state\n"));
-         return TRUE;
-      }
-
-      for (i = 0; i < number; i++) {
-         maxX = MAX(maxX, extents[i].x_org + extents[i].width);
-         maxY = MAX(maxY, extents[i].y_org + extents[i].height);
-      }
-
-      VmwareLog(("DoSetTopology: %d %d\n", maxX, maxY));
-
-      xineramaState = (VMWAREXineramaPtr)calloc(number, sizeof(VMWAREXineramaRec));
-      if (xineramaState) {
-         memcpy(xineramaState, extents, number * sizeof (VMWAREXineramaRec));
-
-         /*
-          * Make this the new pending Xinerama state. Normally we'll
-          * wait until the next mode switch in order to synchronously
-          * push this state out to X clients and the virtual hardware.
-          *
-          * However, if we're already in the right video mode, there
-          * will be no mode change. In this case, push it out
-          * immediately.
-          */
-         free(pVMWARE->xineramaNextState);
-         pVMWARE->xineramaNextState = xineramaState;
-         pVMWARE->xineramaNextNumOutputs = number;
-
-         if (maxX == pVMWARE->ModeReg.svga_reg_width &&
-             maxY == pVMWARE->ModeReg.svga_reg_height) {
-
-	    /*
-	     * The annoyance here is that when we reprogram the
-	     * SVGA device's monitor topology registers, it may
-	     * rearrange those monitors on the host's screen, but they
-	     * will still have the old contents. This might be
-	     * correct, but it isn't guaranteed to match what's on X's
-	     * framebuffer at the moment. So we'll send a
-	     * full-framebuffer update rect afterwards.
-	     */
-
-            vmwareNextXineramaState(pVMWARE);
-#ifdef HAVE_XORG_SERVER_1_2_0
-            RRSendConfigNotify(pScrn->pScreen);
-#endif
-            vmwareSendSVGACmdUpdateFullScreen(pVMWARE);
-
-            return TRUE;
-         } else {
-            return VMwareCtrlDoSetRes(pScrn, maxX, maxY, FALSE);
-         }
-
-      } else {
-         return FALSE;
-      }
-   } else {
+   rects = calloc(number, sizeof(*rects));
+   if (!rects)
       return FALSE;
+
+   for (i = 0; i < number; i++) {
+      rects[i].x = extents[i].x_org;
+      rects[i].y = extents[i].y_org;
+      rects[i].w = extents[i].width;
+      rects[i].h = extents[i].height;
    }
+
+   ret = vmwgfx_update_gui_layout(ms->fd, number, rects);
+
+   free(rects);
+   return (ret == 0);
 }
 
 
@@ -379,9 +278,9 @@ VMwareCtrlSetTopology(ClientPtr client)
    rep.sequenceNumber = client->sequence;
    rep.screen = stuff->screen;
    if (client->swapped) {
-      _swaps(&rep.sequenceNumber, n);
-      _swapl(&rep.length, n);
-      _swapl(&rep.screen, n);
+      swaps(&rep.sequenceNumber, n);
+      swapl(&rep.length, n);
+      swapl(&rep.screen, n);
    }
    WriteToClient(client, sizeof(xVMwareCtrlSetTopologyReply), (char *)&rep);
 
@@ -448,7 +347,7 @@ SVMwareCtrlQueryVersion(ClientPtr client)
    REQUEST(xVMwareCtrlQueryVersionReq);
    REQUEST_SIZE_MATCH(xVMwareCtrlQueryVersionReq);
 
-   _swaps(&stuff->length, n);
+   swaps(&stuff->length, n);
 
    return VMwareCtrlQueryVersion(client);
 }
@@ -479,10 +378,10 @@ SVMwareCtrlSetRes(ClientPtr client)
    REQUEST(xVMwareCtrlSetResReq);
    REQUEST_SIZE_MATCH(xVMwareCtrlSetResReq);
 
-   _swaps(&stuff->length, n);
-   _swapl(&stuff->screen, n);
-   _swapl(&stuff->x, n);
-   _swapl(&stuff->y, n);
+   swaps(&stuff->length, n);
+   swapl(&stuff->screen, n);
+   swapl(&stuff->x, n);
+   swapl(&stuff->y, n);
 
    return VMwareCtrlSetRes(client);
 }
@@ -513,9 +412,9 @@ SVMwareCtrlSetTopology(ClientPtr client)
    REQUEST(xVMwareCtrlSetTopologyReq);
    REQUEST_SIZE_MATCH(xVMwareCtrlSetTopologyReq);
 
-   _swaps(&stuff->length, n);
-   _swapl(&stuff->screen, n);
-   _swapl(&stuff->number, n);
+   swaps(&stuff->length, n);
+   swapl(&stuff->screen, n);
+   swapl(&stuff->number, n);
    /* Each extent is a struct of shorts. */
    SwapRestS(stuff);
 
@@ -596,7 +495,7 @@ VMwareCtrlResetProc(ExtensionEntry* extEntry)
  */
 
 void
-VMwareCtrl_ExtInit(ScrnInfoPtr pScrn)
+vmw_ctrl_ext_init(ScrnInfoPtr pScrn)
 {
    ExtensionEntry *myext;
 
