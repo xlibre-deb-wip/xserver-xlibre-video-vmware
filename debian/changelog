@@ -1,3 +1,11 @@
+xserver-xorg-video-vmware (1:11.99.901-0ubuntu1) precise; urgency=low
+
+  * New upstream release candidate.
+  * Build with XA, enabling accelerated virtualized passthrough.
+  * Add libxatracker-dev to build deps.
+
+ -- Robert Hooker <sarvatt@ubuntu.com>  Thu, 02 Feb 2012 15:40:22 -0500
+
 xserver-xorg-video-vmware (1:11.0.99.901-1) unstable; urgency=low
 
   * New upstream release candidate.
