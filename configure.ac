@@ -23,12 +23,13 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-vmware],
-        [11.99.901],
+        [12.0.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-vmware])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(.)
+AC_SYS_LARGEFILE
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -120,29 +121,22 @@ DRIVER_NAME=vmware
 AC_SUBST([DRIVER_NAME])
 
 AC_MSG_CHECKING([whether to build Kernel Mode Setting and 3D])
-VMWGFX_DIRS=
 if test x$BUILD_VMWGFX = xyes; then
 	AC_MSG_RESULT([yes])
-	AC_SYS_LARGEFILE
-	VMWGFX_DIRS="saa vmwgfx"
-	VMWGFX_LIBADD='$(top_builddir)/vmwgfx/libvmwgfx.la'
-	AC_CONFIG_FILES([
-			saa/Makefile
-			vmwgfx/Makefile
-	])
-        AC_DEFINE([BUILD_VMWGFX], 1,
-                 [Building the vmwgfx driver path])
+        AC_DEFINE([BUILD_VMWGFX], 1, [Building the vmwgfx driver path])
 else
 	AC_MSG_RESULT([no])
 fi
 
-AC_SUBST([VMWGFX_DIRS])
-AC_SUBST([VMWGFX_LIBADD])
+AM_CONDITIONAL(BUILD_VMWGFX, test "x$BUILD_VMWGFX" = xyes)
+
 AC_CONFIG_FILES([
                 Makefile
+                man/Makefile
+                saa/Makefile
+                vmwgfx/Makefile
                 src/Makefile
                 vmwarectrl/Makefile
-                man/Makefile
 ])
 
 AC_OUTPUT

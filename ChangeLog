@@ -1,3 +1,131 @@
+commit b70116b907aa8545f0275589a52275235083bb40
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Thu Mar 15 11:37:26 2012 -0400
+
+    Fix a memory corruption due to a redundant free.
+    
+    We use the empty rect purely as a placeholder and never
+    initialize it with its own memory so lets not try to free
+    it.
+    Spotted by Dave Airlie.
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 57f1204292a116b35d5930752bc06f9065332879
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Tue Mar 13 21:41:11 2012 +0100
+
+    Bump version number for the release
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit e585f9ea04bbd17398d2fa804be38a4e75bc60e4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 13 09:44:46 2012 -0400
+
+    config: move AC_SYS_LARGEFILE in autoconf init section
+    
+    There is no need for this statement to be conditionally included.
+    It adds support for large files without taking anything away.
+    
+    http://www.gnu.org/software/autoconf/manual/autoconf.html
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 04169f3860e4a7d03485631bee40c05fc45b72c6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 12 14:51:38 2012 -0400
+
+    config: include saa and vmwgfx subdirs in the tarball
+    
+    Use AM_CONDITIONAL. Automake knows what to distribute.
+    It needs to be able to navigate down the subdirs to find what
+    needs to be included in the tarball.
+    
+    To test reliably, create a tarball and expand it into a separate
+    directory and build with xatracker. Distcheck will not detect
+    missing code when such code is configured not to build.
+    
+    The content of a tarball *must* always be identical, regardless
+    of the configuration options used or on which platform it was configured.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit e6836ff099e5565dea58a53bba9b2df377241ef7
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Thu Mar 8 09:55:07 2012 -0500
+
+    Bump version number for the release
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+
+commit c5c38bab8c493985349356be5fadc14d3aee8040
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Feb 8 15:00:20 2012 +0100
+
+    vmware/legacy: Fix initial mode size v2
+    
+    Commit "vmwlegacy: Make the default be a minium of 800x600..."
+    read the dimensions from the incorrect register pair.
+    
+    v2: Also treat initial widths and heights larger than the maximum
+    values as an error and revert back to the minimum.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 49b4cbc5100ce9a4cc40132c2839f9401a58b92e
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Feb 6 19:48:57 2012 +0100
+
+    saa: Try to avoid readbacks during polyFillRect
+    
+    This significantly improves performance of shaped windows on top of 3D
+    contents
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Zack Rusin <zackr@vmware.com>
+
+commit ecf6c5b1081e70ec64132a8188c8cc15945c2290
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Feb 2 10:24:26 2012 +0100
+
+    vmware: Kill warnings on Xserver 1.12
+    
+    Compile-tested on servers 1.0 through 1.12.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 3e18d43c7f8ab5dcb94ac285a687eaaa1a578250
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Feb 1 17:30:52 2012 +0100
+
+    vmwgfx: Kill a deprecation warning on server 1.12
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit bfb286bea967c26426aebda2a581f35da0d86884
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Feb 1 17:25:19 2012 +0100
+
+    vmwgfx: Fix up swap[sl] for server 1.12
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 8ff19c2b2f288d6851b444dbda39544980837b73
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Feb 1 16:59:13 2012 +0100
+
+    vmwgfx: Avoid including a library header and use pixman for type conversion
+    
+    The PictTransform type is a typedef of a pixman type.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
 commit 193b5118199028ea0180785bb3f4c8a16359b8b0
 Author: Thomas Hellstrom <thellstrom@vmware.com>
 Date:   Fri Jan 13 17:01:02 2012 +0100

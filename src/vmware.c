@@ -20,7 +20,6 @@ char rcsId_vmware[] =
 
 #include "compiler.h"	/* inb/outb */
 
-#include "xf86PciInfo.h"	/* pci vendor id */
 #include "xf86Pci.h"		/* pci */
 
 #include "mipointer.h"		/* sw cursor */
@@ -286,7 +285,7 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     uint32 id;
     int i;
     ClockRange* clockRanges;
-    IOADDRESS domainIOBase = 0;
+    unsigned long domainIOBase = 0;
     uint32 width = 0, height = 0;
     Bool defaultMode;
 
@@ -320,7 +319,7 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         return FALSE;
     }
 
-    if (DEVICE_ID(pVMWARE->PciInfo) == PCI_CHIP_VMWARE0710) {
+    if (DEVICE_ID(pVMWARE->PciInfo) == PCI_DEVICE_ID_VMWARE_SVGA) {
         pVMWARE->indexReg = domainIOBase +
            SVGA_LEGACY_BASE_PORT + SVGA_INDEX_PORT*sizeof(uint32);
         pVMWARE->valueReg = domainIOBase +
@@ -608,12 +607,19 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         from = X_CONFIG;
     }
 
-    width = vmwareReadReg(pVMWARE, SVGA_REG_MAX_WIDTH);
-    height = vmwareReadReg(pVMWARE, SVGA_REG_MAX_HEIGHT);
+    width = vmwareReadReg(pVMWARE, SVGA_REG_WIDTH);
+    height = vmwareReadReg(pVMWARE, SVGA_REG_HEIGHT);
     width = MAX(width, VMW_MIN_INITIAL_WIDTH);
     height = MAX(height, VMW_MIN_INITIAL_HEIGHT);
-    width = MIN(width, pVMWARE->maxWidth);
-    height = MIN(height, pVMWARE->maxHeight);
+
+    if (width > pVMWARE->maxWidth || height > pVMWARE->maxHeight) {
+	/*
+	 * This is an error condition and shouldn't happen.
+	 * revert to MIN_INITIAL_ values
+	 */
+	width = VMW_MIN_INITIAL_WIDTH;
+	height = VMW_MIN_INITIAL_HEIGHT;
+    }
 
     xf86DrvMsg(pScrn->scrnIndex, from,
 	       "Will %sset up a driver mode with dimensions %dx%d.\n",
