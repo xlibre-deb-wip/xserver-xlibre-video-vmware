@@ -1,3 +1,11 @@
+xserver-xorg-video-vmware (1:12.0.1-1ubuntu1) precise; urgency=low
+
+  * Add libxatracker-dev build dep, it was accidentally dropped by
+    syncing the newer version without it, breaking 3D accelerated
+    passthrough support in vmware. (LP: #962599)
+
+ -- Robert Hooker <sarvatt@ubuntu.com>  Thu, 22 Mar 2012 18:03:40 -0400
+
 xserver-xorg-video-vmware (1:12.0.1-1) unstable; urgency=low
 
   * New upstream release.
