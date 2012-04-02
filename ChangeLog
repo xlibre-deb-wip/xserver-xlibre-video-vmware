@@ -1,3 +1,20 @@
+commit 4d76cfe5e8e5d594ec357b0ef3339f56eeca9c64
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Tue Mar 20 22:05:30 2012 +0100
+
+    Bump version number for the release
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit c6f27561c7cf7c30f89493d64e3c5694b5f53469
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Mon Mar 19 14:53:34 2012 +0100
+
+    vmware/legacy: Fix crash on Xserver 1.12.0
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Zack Rusin <zackr@vmware.com>
+
 commit b70116b907aa8545f0275589a52275235083bb40
 Author: Zack Rusin <zackr@vmware.com>
 Date:   Thu Mar 15 11:37:26 2012 -0400
