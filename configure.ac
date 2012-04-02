@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-vmware],
-        [12.0.1],
+        [12.0.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-vmware])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -89,6 +89,10 @@ PKG_CHECK_EXISTS([xorg-server >= 1.7.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_7_0], 1,
                  [Has version 1.7.0 or greater of the Xserver])
 		 BUILD_VMWGFX=yes],[BUILD_VMWGFX=no])
+
+PKG_CHECK_EXISTS([xorg-server >= 1.12.0],
+                 [AC_DEFINE([HAVE_XORG_SERVER_1_12_0], 1,
+                 [Has version 1.12.0 or greater of the Xserver])])
 
 # Obtain compiler/linker options for the vmwarectrl client tool
 PKG_CHECK_MODULES(X11, x11 xext)
