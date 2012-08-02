@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:12.0.2+git.e5ac80d8-0ubuntu1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:12.0.2+git.e5ac80d8-0ubuntu1) quantal-proposed; urgency=low
 
   * Merge from unreleased debian git, remaining changes:
     - Build with XA, enabling accelerated virtualized passthrough
@@ -6,7 +6,7 @@ xserver-xorg-video-vmware (1:12.0.2+git.e5ac80d8-0ubuntu1) UNRELEASED; urgency=l
       enable_fbdev=1 to the vmwgfx module at load time fixing a crash on
       suspend from inside of the guest in VMware hosts. (LP: 994888)
 
- -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 02 Aug 2012 11:09:09 +0300
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 02 Aug 2012 11:14:41 +0300
 
 xserver-xorg-video-vmware (1:12.0.2+git.e5ac80d8-1) UNRELEASED; urgency=low
 
