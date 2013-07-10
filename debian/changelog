@@ -1,3 +1,9 @@
+xserver-xorg-video-vmware (1:13.0.1-0ubuntu2) saucy; urgency=low
+
+  * Rebuild bump with the patches removed.
+
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Wed, 10 Jul 2013 18:45:00 +0200
+
 xserver-xorg-video-vmware (1:13.0.1-0ubuntu1) saucy; urgency=low
 
   * New upstream release.
