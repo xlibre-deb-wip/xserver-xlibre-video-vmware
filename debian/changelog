@@ -1,3 +1,30 @@
+xserver-xorg-video-vmware (1:13.0.1-0ubuntu1) saucy; urgency=low
+
+  * New upstream release.
+   - Drop remove-mibstore.diff (upstream)
+   - Fix crash under xserver 1.14 (LP: #1199403)
+
+ -- Robert Hooker <sarvatt@ubuntu.com>  Wed, 10 Jul 2013 12:14:42 -0400
+
+xserver-xorg-video-vmware (1:13.0.0-0ubuntu0.2) saucy; urgency=low
+
+  * Refresh remove-mibstore.diff
+
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Thu, 04 Jul 2013 23:11:52 +0200
+
+xserver-xorg-video-vmware (1:13.0.0-0ubuntu0.1) raring; urgency=low
+
+  * Merge from unreleased debian git.
+  * remove-mibstore.diff: Remove mibstore.
+
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Fri, 08 Feb 2013 15:05:54 +0200
+
+xserver-xorg-video-vmware (1:13.0.0-1) UNRELEASED; urgency=low
+
+  * New upstream release to build against xserver 1.13.
+
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 02 Aug 2012 10:46:43 +0300
+
 xserver-xorg-video-vmware (1:12.0.2+git.e5ac80d8-0ubuntu1) quantal-proposed; urgency=low
 
   * Merge from unreleased debian git, remaining changes:
@@ -7,12 +34,6 @@ xserver-xorg-video-vmware (1:12.0.2+git.e5ac80d8-0ubuntu1) quantal-proposed; urg
       suspend from inside of the guest in VMware hosts. (LP: 994888)
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 02 Aug 2012 11:14:41 +0300
-
-xserver-xorg-video-vmware (1:12.0.2+git.e5ac80d8-1) UNRELEASED; urgency=low
-
-  * New upstream snapshot to build against xserver 1.13.
-
- -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 02 Aug 2012 10:46:43 +0300
 
 xserver-xorg-video-vmware (1:12.0.2-1) unstable; urgency=low
 
