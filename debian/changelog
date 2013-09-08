@@ -1,6 +1,6 @@
-xserver-xorg-video-vmware (1:12.0.2+git.e5ac80d8-1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:13.0.1-1) UNRELEASED; urgency=low
 
-  * New upstream snapshot to build against xserver 1.13.
+  * New upstream release
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 02 Aug 2012 10:46:43 +0300
 
