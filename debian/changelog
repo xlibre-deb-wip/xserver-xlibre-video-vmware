@@ -2,6 +2,9 @@ xserver-xorg-video-vmware (1:13.0.1-1) UNRELEASED; urgency=low
 
   * New upstream release
 
+  [ Julien Cristau ]
+  * Add build-dep on libxatracker-dev for 3d support (closes: #675977)
+
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 02 Aug 2012 10:46:43 +0300
 
 xserver-xorg-video-vmware (1:12.0.2-1) unstable; urgency=low
