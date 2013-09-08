@@ -2,7 +2,9 @@
 
 # Enable unit test client tool:
 override_dh_auto_configure:
-	dh_auto_configure -- --enable-vmwarectrl-client
+	dh_auto_configure -- \
+	    --enable-vmwarectrl-client \
+	    --disable-silent-rules
 
 # Install in debian/tmp to retain control through dh_install:
 override_dh_auto_install:

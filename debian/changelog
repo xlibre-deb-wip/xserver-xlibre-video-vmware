@@ -4,6 +4,7 @@ xserver-xorg-video-vmware (1:13.0.1-1) UNRELEASED; urgency=low
 
   [ Julien Cristau ]
   * Add build-dep on libxatracker-dev for 3d support (closes: #675977)
+  * Disable silent build rules.
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 02 Aug 2012 10:46:43 +0300
 
