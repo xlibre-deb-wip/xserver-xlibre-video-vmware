@@ -617,7 +617,7 @@ vmwgfx_scanout_present(ScreenPtr pScreen, int drm_fd,
 	return FALSE;
     }
 
-    if (xa_surface_handle(vpix->hw, &handle, &dummy) != 0) {
+    if (_xa_surface_handle(vpix->hw, &handle, &dummy) != 0) {
 	LogMessage(X_ERROR, "Could not get present surface handle.\n");
 	return FALSE;
     }
@@ -657,7 +657,6 @@ void xorg_flush(ScreenPtr pScreen)
 	if (crtc->enabled) {
 	    pixmap = crtc_get_scanout(crtc);
 	    if (pixmap) {
-		unsigned int j;
 
 		/*
 		 * Remove duplicates.
@@ -1115,6 +1114,7 @@ drv_leave_vt(VT_FUNC_ARGS_DECL)
 
     vmwgfx_cursor_bypass(ms->fd, 0, 0);
     vmwgfx_disable_scanout(pScrn);
+    vmwgfx_saa_drop_master(pScrn->pScreen);
 
     if (drmDropMaster(ms->fd))
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
@@ -1134,6 +1134,8 @@ drv_enter_vt(VT_FUNC_ARGS_DECL)
 
     if (!drv_set_master(pScrn))
 	return FALSE;
+
+    vmwgfx_saa_set_master(pScrn->pScreen);
 
     if (!xf86SetDesiredModes(pScrn))
 	return FALSE;

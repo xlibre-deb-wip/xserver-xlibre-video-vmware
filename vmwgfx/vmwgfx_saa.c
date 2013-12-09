@@ -26,6 +26,7 @@
  */
 
 #include <xorg-server.h>
+#include <xorgVersion.h>
 #include <mi.h>
 #include <fb.h>
 #include <xf86drmMode.h>
@@ -76,7 +77,12 @@ vmwgfx_pixmap_remove_damage(PixmapPtr pixmap)
     if (!spix->damage || vpix->hw || vpix->gmr || vpix->malloc)
 	return;
 
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,14,99,2,0)
+    DamageUnregister(spix->damage);
+#else
     DamageUnregister(&pixmap->drawable, spix->damage);
+#endif
+
     DamageDestroy(spix->damage);
     spix->damage = NULL;
 }
@@ -279,37 +285,40 @@ vmwgfx_saa_dma(struct vmwgfx_saa *vsaa,
 	       Bool to_hw)
 {
     struct vmwgfx_saa_pixmap *vpix = vmwgfx_saa_pixmap(pixmap);
+    void *data = vpix->malloc;
+    int ret;
 
     if (!vpix->hw || (!vpix->gmr && !vpix->malloc))
 	return TRUE;
 
-    if (vpix->gmr && vsaa->can_optimize_dma) {
-	uint32_t handle, dummy;
 
-	if (xa_surface_handle(vpix->hw, &handle, &dummy) != 0)
-	    goto out_err;
-	if (vmwgfx_dma(0, 0, reg, vpix->gmr, pixmap->devKind, handle,
-		       to_hw) != 0)
-	    goto out_err;
-    } else {
-	void *data = vpix->malloc;
-	int ret;
-
-	if (vpix->gmr) {
-	    data = vmwgfx_dmabuf_map(vpix->gmr);
-	    if (!data)
-		goto out_err;
-	}
-
-	ret = xa_surface_dma(vsaa->xa_ctx, vpix->hw, data, pixmap->devKind,
-			     (int) to_hw,
-			     (struct xa_box *) REGION_RECTS(reg),
-			     REGION_NUM_RECTS(reg));
-	if (vpix->gmr)
-	    vmwgfx_dmabuf_unmap(vpix->gmr);
-	if (ret)
+    if (vpix->gmr) {
+	data = vmwgfx_dmabuf_map(vpix->gmr);
+	if (!data)
 	    goto out_err;
     }
+
+    ret = xa_surface_dma(vsaa->xa_ctx, vpix->hw, data, pixmap->devKind,
+			 (int) to_hw,
+			 (struct xa_box *) REGION_RECTS(reg),
+			 REGION_NUM_RECTS(reg));
+    if (vpix->gmr)
+	vmwgfx_dmabuf_unmap(vpix->gmr);
+
+    if (ret)
+	goto out_err;
+
+    ret = xa_surface_dma(vsaa->xa_ctx, vpix->hw, data, pixmap->devKind,
+			 (int) to_hw,
+			 (struct xa_box *) REGION_RECTS(reg),
+			 REGION_NUM_RECTS(reg));
+    if (to_hw)
+	xa_context_flush(vsaa->xa_ctx);
+    if (vpix->gmr)
+	vmwgfx_dmabuf_unmap(vpix->gmr);
+    if (ret)
+	goto out_err;
+
     return TRUE;
   out_err:
     LogMessage(X_ERROR, "DMA %s surface failed.\n",
@@ -420,6 +429,7 @@ vmwgfx_create_pixmap(struct saa_driver *driver, struct saa_pixmap *spix,
 
     WSBMINITLISTHEAD(&vpix->sync_x_head);
     WSBMINITLISTHEAD(&vpix->scanout_list);
+    WSBMINITLISTHEAD(&vpix->pixmap_list);
 
     return TRUE;
 }
@@ -496,6 +506,7 @@ vmwgfx_destroy_pixmap(struct saa_driver *driver, PixmapPtr pixmap)
      */
 
     vmwgfx_pixmap_remove_present(vpix);
+    WSBMLISTDELINIT(&vpix->pixmap_list);
     WSBMLISTDELINIT(&vpix->sync_x_head);
 
     if (vpix->hw_is_dri2_fronts)
@@ -624,6 +635,8 @@ vmwgfx_modify_pixmap_header (PixmapPtr pixmap, int w, int h, int depth,
 			     int bpp, int devkind, void *pixdata)
 {
     struct vmwgfx_saa_pixmap *vpix = vmwgfx_saa_pixmap(pixmap);
+    ScreenPtr pScreen = pixmap->drawable.pScreen;
+    struct vmwgfx_saa *vsaa = to_vmwgfx_saa(saa_get_driver(pScreen));
     unsigned int old_height;
     unsigned int old_width;
     unsigned int old_pitch;
@@ -667,6 +680,8 @@ vmwgfx_modify_pixmap_header (PixmapPtr pixmap, int w, int h, int depth,
 
     vmwgfx_pix_resize(pixmap, old_pitch, old_height, old_width);
     vmwgfx_pixmap_free_storage(vpix);
+    WSBMLISTADDTAIL(&vpix->pixmap_list, &vsaa->pixmaps);
+
     return TRUE;
 
   out_no_modify:
@@ -683,7 +698,7 @@ vmwgfx_present_prepare(struct vmwgfx_saa *vsaa,
 
     (void) pScreen;
     if (src_vpix == dst_vpix || !src_vpix->hw ||
-	xa_surface_handle(src_vpix->hw, &vsaa->src_handle, &dummy) != 0)
+	_xa_surface_handle(src_vpix->hw, &vsaa->src_handle, &dummy) != 0)
 	return FALSE;
 
     REGION_NULL(pScreen, &vsaa->present_region);
@@ -856,7 +871,7 @@ vmwgfx_copy_prepare(struct saa_driver *driver,
     Bool has_valid_hw;
 
     if (!vsaa->xat || !SAA_PM_IS_SOLID(&dst_pixmap->drawable, plane_mask) ||
-	alu != GXcopy)
+	alu != GXcopy || !vsaa->is_master)
 	return FALSE;
 
     src_vpix = vmwgfx_saa_pixmap(src_pixmap);
@@ -929,6 +944,7 @@ vmwgfx_copy_prepare(struct saa_driver *driver,
 
 	if (!vmwgfx_hw_validate(src_pixmap, src_reg)) {
 	    xa_copy_done(vsaa->xa_ctx);
+	    xa_context_flush(vsaa->xa_ctx);
 	    return FALSE;
 	}
 
@@ -1029,6 +1045,7 @@ vmwgfx_copy_done(struct saa_driver *driver)
 	return;
     }
     xa_copy_done(vsaa->xa_ctx);
+    xa_context_flush(vsaa->xa_ctx);
 }
 
 static Bool
@@ -1050,6 +1067,9 @@ vmwgfx_composite_prepare(struct saa_driver *driver, CARD8 op,
     Bool valid_hw;
     RegionRec empty;
     struct xa_composite *xa_comp;
+
+    if (!vsaa->is_master)
+	return FALSE;
 
     REGION_NULL(pScreen, &empty);
 
@@ -1175,6 +1195,7 @@ vmwgfx_composite_done(struct saa_driver *driver)
    struct vmwgfx_saa *vsaa = to_vmwgfx_saa(driver);
 
    xa_composite_done(vsaa->xa_ctx);
+   xa_context_flush(vsaa->xa_ctx);
 }
 
 static void
@@ -1356,11 +1377,12 @@ vmwgfx_saa_init(ScreenPtr pScreen, int drm_fd, struct xa_tracker *xat,
 	vsaa->xa_ctx = xa_context_default(xat);
     vsaa->drm_fd = drm_fd;
     vsaa->present_flush = present_flush;
-    vsaa->can_optimize_dma = FALSE;
     vsaa->use_present_opt = direct_presents;
     vsaa->only_hw_presents = only_hw_presents;
     vsaa->rendercheck = rendercheck;
+    vsaa->is_master = TRUE;
     WSBMINITLISTHEAD(&vsaa->sync_x_list);
+    WSBMINITLISTHEAD(&vsaa->pixmaps);
 
     vsaa->driver = vmwgfx_saa_driver;
     vsaa->vcomp = vmwgfx_alloc_composite();
@@ -1436,7 +1458,7 @@ vmwgfx_scanout_ref(struct vmwgfx_screen_entry  *entry)
 	     */
 	    if (!vmwgfx_hw_accel_validate(pixmap, 0, XA_FLAG_SCANOUT, 0, NULL))
 		goto out_err;
-	    if (xa_surface_handle(vpix->hw, &handle, &dummy) != 0)
+	    if (_xa_surface_handle(vpix->hw, &handle, &dummy) != 0)
 		goto out_err;
 	    depth = xa_format_depth(xa_surface_format(vpix->hw));
 
@@ -1509,4 +1531,35 @@ vmwgfx_scanout_unref(struct vmwgfx_screen_entry *entry)
 
     entry->pixmap = NULL;
     pixmap->drawable.pScreen->DestroyPixmap(pixmap);
+}
+
+void
+vmwgfx_saa_set_master(ScreenPtr pScreen)
+{
+    struct vmwgfx_saa *vsaa = to_vmwgfx_saa(saa_get_driver(pScreen));
+
+    vsaa->is_master = TRUE;
+}
+
+void
+vmwgfx_saa_drop_master(ScreenPtr pScreen)
+{
+    struct vmwgfx_saa *vsaa = to_vmwgfx_saa(saa_get_driver(pScreen));
+    struct _WsbmListHead *list;
+    struct vmwgfx_saa_pixmap *vpix;
+    struct saa_pixmap *spix;
+
+    WSBMLISTFOREACH(list, &vsaa->pixmaps) {
+	vpix = WSBMLISTENTRY(list, struct vmwgfx_saa_pixmap, pixmap_list);
+	spix = &vpix->base;
+
+	if (!vpix->hw)
+	    continue;
+
+	(void) vmwgfx_download_from_hw(&vsaa->driver, spix->pixmap,
+				       &spix->dirty_hw);
+	REGION_EMPTY(draw->pScreen, &spix->dirty_hw);
+    }
+
+    vsaa->is_master = FALSE;
 }
