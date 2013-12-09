@@ -1,3 +1,10 @@
+xserver-xorg-video-vmware (1:13.0.1.gita40cbd7-0ubuntu1) trusty; urgency=low
+
+  * Grab fixes from git to rebuild against libxatracker2.
+  * Only build on architectures that have libxatracker2.
+
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Mon, 09 Dec 2013 13:41:01 +0100
+
 xserver-xorg-video-vmware (1:13.0.1-0ubuntu2) saucy; urgency=low
 
   * Rebuild bump with the patches removed.

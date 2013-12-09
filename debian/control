@@ -20,13 +20,13 @@ Build-Depends:
  libdrm-dev [!hurd-i386],
  libxext-dev,
  libx11-dev,
- libxatracker-dev
+ libxatracker-dev (>= 10.0.0),
 Standards-Version: 3.9.1
 Vcs-Git: git://git.debian.org/git/pkg-xorg/driver/xserver-xorg-video-vmware
 Vcs-Browser: http://git.debian.org/?p=pkg-xorg/driver/xserver-xorg-video-vmware.git
 
 Package: xserver-xorg-video-vmware
-Architecture: any
+Architecture: amd64 armel armhf i386 powerpc
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
