@@ -1,3 +1,9 @@
+xserver-xorg-video-vmware (1:13.0.1.git8da9817-0ubuntu1) trusty; urgency=low
+
+  * Sync fixes from git to make libxatracker2 work correctly. (LP: #1271186)
+
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Tue, 21 Jan 2014 17:28:41 +0100
+
 xserver-xorg-video-vmware (1:13.0.1.gita40cbd7-0ubuntu1) trusty; urgency=low
 
   * Grab fixes from git to rebuild against libxatracker2.
