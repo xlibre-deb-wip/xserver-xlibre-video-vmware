@@ -284,6 +284,109 @@ vmwgfx_dmabuf_destroy(struct vmwgfx_dmabuf *buf)
 }
 
 int
+vmwgfx_dma(int host_x, int host_y,
+	   RegionPtr region, struct vmwgfx_dmabuf *buf,
+	   uint32_t buf_pitch, uint32_t surface_handle, int to_surface)
+{
+    BoxPtr clips = REGION_RECTS(region);
+    unsigned int num_clips = REGION_NUM_RECTS(region);
+    struct drm_vmw_execbuf_arg arg;
+    struct drm_vmw_fence_rep rep;
+    int ret;
+    unsigned int size;
+    unsigned i;
+    SVGA3dCopyBox *cb;
+    SVGA3dCmdSurfaceDMASuffix *suffix;
+    SVGA3dCmdSurfaceDMA *body;
+    struct vmwgfx_int_dmabuf *ibuf = vmwgfx_int_dmabuf(buf);
+
+    struct {
+	SVGA3dCmdHeader header;
+	SVGA3dCmdSurfaceDMA body;
+	SVGA3dCopyBox cb;
+    } *cmd;
+
+    if (num_clips == 0)
+	return 0;
+
+    size = sizeof(*cmd) + (num_clips - 1) * sizeof(cmd->cb) +
+	sizeof(*suffix);
+    cmd = malloc(size);
+    if (!cmd)
+	return -1;
+
+    cmd->header.id = SVGA_3D_CMD_SURFACE_DMA;
+    cmd->header.size = sizeof(cmd->body) + num_clips * sizeof(cmd->cb) +
+	sizeof(*suffix);
+    cb = &cmd->cb;
+
+    suffix = (SVGA3dCmdSurfaceDMASuffix *) &cb[num_clips];
+    suffix->suffixSize = sizeof(*suffix);
+    suffix->maximumOffset = (uint32_t) -1;
+    suffix->flags.discard = 0;
+    suffix->flags.unsynchronized = 0;
+    suffix->flags.reserved = 0;
+
+    body = &cmd->body;
+    body->guest.ptr.gmrId = buf->gmr_id;
+    body->guest.ptr.offset = buf->gmr_offset;
+    body->guest.pitch = buf_pitch;
+    body->host.sid = surface_handle;
+    body->host.face = 0;
+    body->host.mipmap = 0;
+
+    body->transfer =  (to_surface ? SVGA3D_WRITE_HOST_VRAM :
+		       SVGA3D_READ_HOST_VRAM);
+
+
+    for (i=0; i < num_clips; i++, cb++, clips++) {
+	cb->x = (uint16_t) clips->x1 + host_x;
+	cb->y = (uint16_t) clips->y1 + host_y;
+	cb->z = 0;
+	cb->srcx = (uint16_t) clips->x1;
+	cb->srcy = (uint16_t) clips->y1;
+	cb->srcz = 0;
+	cb->w = (uint16_t) (clips->x2 - clips->x1);
+	cb->h = (uint16_t) (clips->y2 - clips->y1);
+	cb->d = 1;
+#if 0
+	LogMessage(X_INFO, "DMA! x: %u y: %u srcx: %u srcy: %u w: %u h: %u %s\n",
+		   cb->x, cb->y, cb->srcx, cb->srcy, cb->w, cb->h,
+		   to_surface ? "to" : "from");
+#endif
+
+    }
+
+    memset(&arg, 0, sizeof(arg));
+    memset(&rep, 0, sizeof(rep));
+
+    rep.error = -EFAULT;
+    arg.fence_rep = ((to_surface) ? 0UL : (unsigned long)&rep);
+    arg.commands = (unsigned long)cmd;
+    arg.command_size = size;
+    arg.throttle_us = 0;
+    arg.version = DRM_VMW_EXECBUF_VERSION;
+
+    ret = drmCommandWrite(ibuf->drm_fd, DRM_VMW_EXECBUF, &arg, sizeof(arg));
+    if (ret) {
+	LogMessage(X_ERROR, "DMA error %s.\n", strerror(-ret));
+    }
+
+    free(cmd);
+
+    if (rep.error == 0) {
+	ret = vmwgfx_fence_wait(ibuf->drm_fd, rep.handle, TRUE);
+	if (ret) {
+	    LogMessage(X_ERROR, "DMA from host fence wait error %s.\n",
+		       strerror(-ret));
+	    vmwgfx_fence_unref(ibuf->drm_fd, rep.handle);
+	}
+    }
+
+    return 0;
+}
+
+int
 vmwgfx_get_param(int drm_fd, uint32_t param, uint64_t *out)
 {
     struct drm_vmw_getparam_arg gp_arg;
@@ -397,3 +500,42 @@ vmwgfx_max_fb_size(int drm_fd, size_t *size)
 
     return 0;
 }
+
+#ifdef HAVE_LIBDRM_2_4_38
+/**
+ * vmwgfx_prime_fd_to_handle - Return a TTM handle to a prime object
+ *
+ * @drm_fd: File descriptor for the drm connection.
+ * @prime_fd: File descriptor identifying the prime object.
+ * @handle: Pointer to returned TTM handle.
+ *
+ * Takes a reference on the underlying object and returns a TTM handle to it.
+ */
+int
+vmwgfx_prime_fd_to_handle(int drm_fd, int prime_fd, uint32_t *handle)
+{
+    *handle = 0;
+
+    return drmPrimeFDToHandle(drm_fd, prime_fd, handle);
+}
+
+/**
+ * vmwgfx_prime_release_handle - Release a reference on a TTM object
+ *
+ * @drm_fd: File descriptor for the drm connection.
+ * @handle: TTM handle as returned by vmwgfx_prime_fd_to_handle.
+ *
+ * Releases the reference obtained by vmwgfx_prime_fd_to_handle().
+ */
+void
+vmwgfx_prime_release_handle(int drm_fd, uint32_t handle)
+{
+    struct drm_vmw_surface_arg s_arg;
+
+    memset(&s_arg, 0, sizeof(s_arg));
+    s_arg.sid = handle;
+
+    (void) drmCommandWrite(drm_fd, DRM_VMW_UNREF_SURFACE, &s_arg,
+			   sizeof(s_arg));
+}
+#endif /* HAVE_LIBDRM_2_4_38 */

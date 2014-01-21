@@ -50,10 +50,12 @@ struct vmwgfx_saa {
     int ydiff;
     RegionRec present_region;
     uint32_t src_handle;
+    Bool can_optimize_dma;
     Bool use_present_opt;
     Bool only_hw_presents;
     Bool rendercheck;
     Bool is_master;
+    Bool known_prime_format;
     void (*present_flush) (ScreenPtr pScreen);
     struct _WsbmListHead sync_x_list;
     struct _WsbmListHead pixmaps;

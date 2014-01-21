@@ -282,43 +282,56 @@ static Bool
 vmwgfx_saa_dma(struct vmwgfx_saa *vsaa,
 	       PixmapPtr pixmap,
 	       RegionPtr reg,
-	       Bool to_hw)
+	       Bool to_hw,
+	       int dx,
+	       int dy,
+	       struct xa_surface *srf)
 {
     struct vmwgfx_saa_pixmap *vpix = vmwgfx_saa_pixmap(pixmap);
-    void *data = vpix->malloc;
-    int ret;
 
-    if (!vpix->hw || (!vpix->gmr && !vpix->malloc))
+    if (!srf)
+	srf = vpix->hw;
+
+    if (!srf || (!vpix->gmr && !vpix->malloc))
 	return TRUE;
 
+    if (vpix->gmr && vsaa->can_optimize_dma) {
+	uint32_t handle, dummy;
 
-    if (vpix->gmr) {
-	data = vmwgfx_dmabuf_map(vpix->gmr);
-	if (!data)
+	if (_xa_surface_handle(srf, &handle, &dummy) != 0)
+	    goto out_err;
+	if (vmwgfx_dma(dx, dy, reg, vpix->gmr, pixmap->devKind, handle,
+		       to_hw) != 0)
+	    goto out_err;
+    } else {
+	uint8_t *data = (uint8_t *) vpix->malloc;
+	int ret;
+
+	if (vpix->gmr) {
+	    data = (uint8_t *) vmwgfx_dmabuf_map(vpix->gmr);
+	    if (!data)
+		goto out_err;
+	}
+
+	if (dx || dy) {
+	    REGION_TRANSLATE(pScreen, reg, dx, dy);
+	    data -= ((dx * pixmap->drawable.bitsPerPixel + 7)/8 +
+		     dy * pixmap->devKind);
+	}
+
+	ret = xa_surface_dma(vsaa->xa_ctx, srf, data, pixmap->devKind,
+			     (int) to_hw,
+			     (struct xa_box *) REGION_RECTS(reg),
+			     REGION_NUM_RECTS(reg));
+	if (to_hw)
+	    xa_context_flush(vsaa->xa_ctx);
+	if (vpix->gmr)
+	    vmwgfx_dmabuf_unmap(vpix->gmr);
+	if (dx || dy)
+	    REGION_TRANSLATE(pScreen, reg, -dx, -dy);
+	if (ret)
 	    goto out_err;
     }
-
-    ret = xa_surface_dma(vsaa->xa_ctx, vpix->hw, data, pixmap->devKind,
-			 (int) to_hw,
-			 (struct xa_box *) REGION_RECTS(reg),
-			 REGION_NUM_RECTS(reg));
-    if (vpix->gmr)
-	vmwgfx_dmabuf_unmap(vpix->gmr);
-
-    if (ret)
-	goto out_err;
-
-    ret = xa_surface_dma(vsaa->xa_ctx, vpix->hw, data, pixmap->devKind,
-			 (int) to_hw,
-			 (struct xa_box *) REGION_RECTS(reg),
-			 REGION_NUM_RECTS(reg));
-    if (to_hw)
-	xa_context_flush(vsaa->xa_ctx);
-    if (vpix->gmr)
-	vmwgfx_dmabuf_unmap(vpix->gmr);
-    if (ret)
-	goto out_err;
-
     return TRUE;
   out_err:
     LogMessage(X_ERROR, "DMA %s surface failed.\n",
@@ -354,7 +367,7 @@ vmwgfx_download_from_hw(struct saa_driver *driver, PixmapPtr pixmap,
     if (!vmwgfx_pixmap_create_sw(vsaa, pixmap))
 	goto out_err;
 
-    if (!vmwgfx_saa_dma(vsaa, pixmap, readback, FALSE))
+    if (!vmwgfx_saa_dma(vsaa, pixmap, readback, FALSE, 0, 0, NULL))
 	goto out_err;
     REGION_SUBTRACT(vsaa->pScreen, &spix->dirty_hw, &spix->dirty_hw, readback);
     REGION_UNINIT(vsaa->pScreen, &intersection);
@@ -369,7 +382,8 @@ static Bool
 vmwgfx_upload_to_hw(struct saa_driver *driver, PixmapPtr pixmap,
 		    RegionPtr upload)
 {
-    return vmwgfx_saa_dma(to_vmwgfx_saa(driver), pixmap, upload, TRUE);
+    return vmwgfx_saa_dma(to_vmwgfx_saa(driver), pixmap, upload, TRUE,
+			  0, 0, NULL);
 }
 
 static void
@@ -754,6 +768,33 @@ vmwgfx_check_hw_contents(struct vmwgfx_saa *vsaa,
     REGION_UNINIT(vsaa->pScreen, &intersection);
 }
 
+/**
+ * vmwgfx_prefer_gmr: Prefer a dma buffer over malloced memory for software
+ * rendered storage
+ *
+ * @vsaa: Pointer to a struct vmwgfx_saa accelerator.
+ * @pixmap: Pointer to pixmap whose storage preference we want to alter.
+ *
+ * If possible, alter the storage or future storage of the software contents
+ * of this pixmap to be in a DMA buffer rather than in malloced memory.
+ * This function should be called when it's likely that frequent DMA operations
+ * will occur between a surface and the memory holding the software
+ * contents.
+ */
+static void
+vmwgfx_prefer_gmr(struct vmwgfx_saa *vsaa, PixmapPtr pixmap)
+{
+    struct vmwgfx_saa_pixmap *vpix = vmwgfx_saa_pixmap(pixmap);
+
+    if (vsaa->can_optimize_dma) {
+	if (vpix->malloc) {
+	    (void) vmwgfx_pixmap_create_gmr(vsaa, pixmap);
+	} else if (vpix->backing & VMWGFX_PIX_MALLOC) {
+	    vpix->backing |= VMWGFX_PIX_GMR;
+	    vpix->backing &= ~VMWGFX_PIX_MALLOC;
+	}
+    }
+}
 
 Bool
 vmwgfx_create_hw(struct vmwgfx_saa *vsaa,
@@ -770,7 +811,7 @@ vmwgfx_create_hw(struct vmwgfx_saa *vsaa,
 	return TRUE;
 
     new_flags = (vpix->xa_flags & ~vpix->staging_remove_flags) |
-	vpix->staging_add_flags;
+	vpix->staging_add_flags | XA_FLAG_SHARED;
 
     hw = xa_surface_create(vsaa->xat,
 			   pixmap->drawable.width,
@@ -787,14 +828,15 @@ vmwgfx_create_hw(struct vmwgfx_saa *vsaa,
     if (!vmwgfx_pixmap_add_damage(pixmap))
 	goto out_no_damage;
 
-    /*
-     * Even if we don't have a GMR yet, indicate that when needed it
-     * should be created.
-     */
-
     vpix->hw = hw;
     vpix->backing |= VMWGFX_PIX_SURFACE;
     vmwgfx_pixmap_free_storage(vpix);
+
+    /*
+     * If there is a HW surface, make sure that the shadow is
+     * (or will be) a GMR, provided we can do fast DMAs from / to it.
+     */
+    vmwgfx_prefer_gmr(vsaa, pixmap);
 
     return TRUE;
 
@@ -1227,10 +1269,14 @@ vmwgfx_operation_complete(struct saa_driver *driver,
      * executed at glxWaitX(). Currently glxWaitX() is broken, so
      * we flush immediately, unless we're VT-switched away, in which
      * case a flush would deadlock in the kernel.
+     *
+     * For pixmaps for which vpix->hw_is_hosted is true, we can explicitly
+     * inform the compositor when contents has changed, so for those pixmaps
+     * we defer the upload until the compositor is informed, by putting
+     * them on the sync_x_list. Note that hw_is_dri2_fronts take precedence.
      */
-
-    if (vpix->hw && vpix->hw_is_dri2_fronts) {
-	if (1 && pScrn->vtSema &&
+    if (vpix->hw && (vpix->hw_is_dri2_fronts || vpix->hw_is_hosted)) {
+	if (pScrn->vtSema && vpix->hw_is_dri2_fronts &&
 	    vmwgfx_upload_to_hw(driver, pixmap, &spix->dirty_shadow)) {
 
 	    REGION_EMPTY(vsaa->pScreen, &spix->dirty_shadow);
@@ -1377,10 +1423,12 @@ vmwgfx_saa_init(ScreenPtr pScreen, int drm_fd, struct xa_tracker *xat,
 	vsaa->xa_ctx = xa_context_default(xat);
     vsaa->drm_fd = drm_fd;
     vsaa->present_flush = present_flush;
+    vsaa->can_optimize_dma = TRUE;
     vsaa->use_present_opt = direct_presents;
     vsaa->only_hw_presents = only_hw_presents;
     vsaa->rendercheck = rendercheck;
     vsaa->is_master = TRUE;
+    vsaa->known_prime_format = FALSE;
     WSBMINITLISTHEAD(&vsaa->sync_x_list);
     WSBMINITLISTHEAD(&vsaa->pixmaps);
 
@@ -1539,6 +1587,7 @@ vmwgfx_saa_set_master(ScreenPtr pScreen)
     struct vmwgfx_saa *vsaa = to_vmwgfx_saa(saa_get_driver(pScreen));
 
     vsaa->is_master = TRUE;
+    vmwgfx_flush_dri2(pScreen);
 }
 
 void
@@ -1563,3 +1612,141 @@ vmwgfx_saa_drop_master(ScreenPtr pScreen)
 
     vsaa->is_master = FALSE;
 }
+
+/*
+ * *************************************************************************
+ * Helpers for hosted.
+ */
+
+#if (XA_TRACKER_VERSION_MAJOR >= 2) && defined(HAVE_LIBDRM_2_4_38)
+
+/**
+ * vmwgfx_saa_copy_to_surface - Copy Drawable contents to an external surface.
+ *
+ * @pDraw: Pointer to source drawable.
+ * @surface_fd: Prime file descriptor of external surface to copy to.
+ * @dst_box: BoxRec describing the destination bounding box.
+ * @region: Region of drawable to copy. Note: The code assumes that the
+ * region is relative to the drawable origin, not the underlying pixmap
+ * origin.
+ *
+ * Copies the contents (both software- and accelerated contents) to an
+ * external surface.
+ */
+Bool
+vmwgfx_saa_copy_to_surface(DrawablePtr pDraw, uint32_t surface_fd,
+			   const BoxRec *dst_box, RegionPtr region)
+{
+    ScreenPtr pScreen = pDraw->pScreen;
+    struct vmwgfx_saa *vsaa = to_vmwgfx_saa(saa_get_driver(pScreen));
+    PixmapPtr src;
+    struct saa_pixmap *spix;
+    struct vmwgfx_saa_pixmap *vpix;
+    const BoxRec *box;
+    int n;
+    int sx, sy, dx, dy;
+    struct xa_surface *dst;
+    uint32_t handle;
+    Bool ret = TRUE;
+    RegionRec intersection;
+    RegionPtr copy_region = region;
+
+    if (vmwgfx_prime_fd_to_handle(vsaa->drm_fd, surface_fd, &handle) < 0)
+	return FALSE;
+
+    dst = xa_surface_from_handle(vsaa->xat, pDraw->width, pDraw->height,
+				 pDraw->depth, xa_type_argb,
+				 xa_format_unknown,
+				 XA_FLAG_SHARED | XA_FLAG_RENDER_TARGET,
+				 handle,
+				 (pDraw->width * pDraw->bitsPerPixel + 7) / 8);
+
+    if (!dst) {
+	ret = FALSE;
+	goto out_no_surface;
+    }
+
+    /*
+     * Assume damage region is relative to the source window.
+     */
+    src = saa_get_pixmap(pDraw, &sx, &sy);
+    sx += pDraw->x;
+    sy += pDraw->y;
+    if (sx || sy)
+	REGION_TRANSLATE(pScreen, region, sx, sy);
+
+    dx = dst_box->x1 - sx;
+    dy = dst_box->y1 - sy;
+
+    spix = saa_get_saa_pixmap(src);
+    vpix = to_vmwgfx_saa_pixmap(spix);
+
+    /*
+     * Make sure software contents of the source pixmap is henceforth put
+     * in a GMR to avoid the extra copy in the xa DMA.
+     */
+    vmwgfx_prefer_gmr(vsaa, src);
+
+    /*
+     * Determine the intersection between software contents and region to copy.
+     */
+
+    if (vsaa->known_prime_format) {
+	REGION_NULL(pScreen, &intersection);
+	if (!vpix->hw)
+	    REGION_COPY(pScreen, &intersection, region);
+	else if (spix->damage && REGION_NOTEMPTY(pScreen, &spix->dirty_shadow))
+	    REGION_INTERSECT(pScreen, &intersection, region, &spix->dirty_shadow);
+
+	/*
+	 * DMA software contents directly into the destination. Then subtract
+	 * the region we've DMA'd from the region to copy.
+	 */
+	if (REGION_NOTEMPTY(pScreen, &intersection)) {
+	    if (vmwgfx_saa_dma(vsaa, src, &intersection, TRUE, dx, dy, dst)) {
+		REGION_SUBTRACT(pScreen, &intersection, region, &intersection);
+		copy_region = &intersection;
+	    }
+	}
+    }
+
+    if (!REGION_NOTEMPTY(pScreen, copy_region))
+	goto out_no_copy;
+
+    /*
+     * Copy Hardware contents to the destination
+     */
+    box = REGION_RECTS(copy_region);
+    n = REGION_NUM_RECTS(copy_region);
+
+    if (!vmwgfx_hw_accel_validate(src, 0, 0, 0, copy_region)) {
+	ret = FALSE;
+	goto out_no_copy;
+    }
+
+    if (xa_copy_prepare(vsaa->xa_ctx, dst, vpix->hw) != XA_ERR_NONE) {
+	ret = FALSE;
+	goto out_no_copy;
+    }
+
+    while(n--) {
+	xa_copy(vsaa->xa_ctx, box->x1 + dx, box->y1 + dy, box->x1, box->y1,
+		box->x2 - box->x1, box->y2 - box->y1);
+	box++;
+    }
+
+    xa_copy_done(vsaa->xa_ctx);
+    xa_context_flush(vsaa->xa_ctx);
+
+  out_no_copy:
+    if (vsaa->known_prime_format)
+	REGION_UNINIT(pScreen, &intersection);
+    if (sx || sy)
+	REGION_TRANSLATE(pScreen, region, -sx, -sy);
+    xa_surface_unref(dst);
+  out_no_surface:
+    vmwgfx_prime_release_handle(vsaa->drm_fd, handle);
+
+    return ret;
+}
+#endif
