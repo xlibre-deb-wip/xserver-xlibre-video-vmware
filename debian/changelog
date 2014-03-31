@@ -1,9 +1,9 @@
-xserver-xorg-video-vmware (1:13.0.2-1) UNRELEASED; urgency=medium
+xserver-xorg-video-vmware (1:13.0.2-1) unstable; urgency=medium
 
   * New upstream release
     + supports current libxatracker (closes: #742915)
 
- -- Julien Cristau <jcristau@debian.org>  Mon, 31 Mar 2014 16:24:10 +0200
+ -- Julien Cristau <jcristau@debian.org>  Mon, 31 Mar 2014 16:29:57 +0200
 
 xserver-xorg-video-vmware (1:13.0.1-3) unstable; urgency=medium
 
