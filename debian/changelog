@@ -1,3 +1,10 @@
+xserver-xorg-video-vmware (1:13.0.2-2ubuntu1) trusty; urgency=low
+
+  * Merge from released debian-unstable.
+  * Cherry pick some fixes from git.
+
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Tue, 08 Apr 2014 16:42:04 +0200
+
 xserver-xorg-video-vmware (1:13.0.2-2) unstable; urgency=medium
 
   * Fix build failure on kfreebsd (closes: #743239)
