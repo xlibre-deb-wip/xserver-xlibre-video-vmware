@@ -1,4 +1,10 @@
-xserver-xorg-video-vmware (1:13.0.1.git8da9817-0ubuntu1) trusty; urgency=low
+xserver-xorg-video-vmware (1:13.0.1.git.20140115.8da9817-0ubuntu2) trusty; urgency=low
+
+  * Rebuild for xorg 1.15 abi.
+
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Wed, 05 Feb 2014 10:12:27 +0000
+
+xserver-xorg-video-vmware (1:13.0.1.git.20140115.8da9817-0ubuntu1) trusty; urgency=low
 
   * Sync fixes from git to make libxatracker2 work correctly. (LP: #1271186)
 
