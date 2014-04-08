@@ -1,3 +1,22 @@
+commit cbd56b3759f01ec18ae0705d023e4c0b2ab38c25
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Wed Mar 26 12:45:52 2014 +0100
+
+    Bump the version number to 13.0.2
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 51cdfa6f5102bde92c98630ace6650e4b286f6e2
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Fri Feb 21 18:10:07 2014 +0100
+
+    vmware: Fix compilation on newer X servers
+    
+    Found by Bryan Lee. Later versions of X.org turns dispMode pointers
+    into const upsetting gcc, turn them into size_t's instead.
+    
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
 commit 8da981712f62050076cff53e1b40ed1e307fcca8
 Author: Thomas Hellstrom <thellstrom@vmware.com>
 Date:   Wed Jan 15 11:04:05 2014 +0100
