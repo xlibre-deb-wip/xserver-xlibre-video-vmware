@@ -1,3 +1,9 @@
+xserver-xorg-video-vmware (1:13.0.2-3) UNRELEASED; urgency=medium
+
+  * rules: avoid mixing implicit and normal rules; make 4 doesn't like that.
+
+ -- Julien Cristau <jcristau@debian.org>  Tue, 29 Apr 2014 18:34:12 +0200
+
 xserver-xorg-video-vmware (1:13.0.2-2) unstable; urgency=medium
 
   * Fix build failure on kfreebsd (closes: #743239)
