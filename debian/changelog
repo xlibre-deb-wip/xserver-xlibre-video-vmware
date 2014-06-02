@@ -1,8 +1,9 @@
-xserver-xorg-video-vmware (1:13.0.2-3) UNRELEASED; urgency=medium
+xserver-xorg-video-vmware (1:13.0.2-3) unstable; urgency=medium
 
-  * rules: avoid mixing implicit and normal rules; make 4 doesn't like that.
+  * rules: avoid mixing implicit and normal rules; make 4 doesn't like that
+    (closes: #750265)
 
- -- Julien Cristau <jcristau@debian.org>  Tue, 29 Apr 2014 18:34:12 +0200
+ -- Julien Cristau <jcristau@debian.org>  Mon, 02 Jun 2014 22:28:59 +0200
 
 xserver-xorg-video-vmware (1:13.0.2-2) unstable; urgency=medium
 
