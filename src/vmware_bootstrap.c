@@ -30,6 +30,7 @@
 #endif
 
 #include "xf86.h"
+#include <xorgVersion.h>
 #include "compiler.h"
 #include "xf86Pci.h"		/* pci */
 #include "vm_device_version.h"
@@ -48,6 +49,10 @@
 #ifndef HAVE_XORG_SERVER_1_5_0
 #include <xf86_ansic.h>
 #include <xf86_libc.h>
+#endif
+
+#ifdef XSERVER_PLATFORM_BUS
+#include "xf86platformBus.h"
 #endif
 
 #ifdef HaveDriverFuncs
@@ -247,9 +252,6 @@ VMwarePreinitStub(ScrnInfoPtr pScrn, int flags)
     vmwlegacy_hookup(pScrn);
 
     pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
-    if (pEnt->location.type != BUS_PCI)
-        return FALSE;
-
     pciInfo = xf86GetPciInfoForEntity(pEnt->index);
     if (pciInfo == NULL)
         return FALSE;
@@ -407,6 +409,45 @@ VMWAREProbe(DriverPtr drv, int flags)
 }
 #endif
 
+#ifdef XSERVER_PLATFORM_BUS
+static Bool
+VMwarePlatformProbe(DriverPtr drv, int entity, int flags,
+                    struct xf86_platform_device *dev, intptr_t match_data)
+{
+    ScrnInfoPtr pScrn;
+    int scrnFlag = 0;
+
+    if (!dev->pdev)
+        return FALSE;
+
+    if (flags & PLATFORM_PROBE_GPU_SCREEN)
+        scrnFlag = XF86_ALLOCATE_GPU_SCREEN;
+
+    pScrn = xf86AllocateScreen(drv, scrnFlag);
+    if (!pScrn)
+        return FALSE;
+
+    if (xf86IsEntitySharable(entity))
+        xf86SetEntityShared(entity);
+
+    xf86AddEntityToScreen(pScrn, entity);
+
+    pScrn->driverVersion = VMWARE_DRIVER_VERSION;
+    pScrn->driverName = VMWARE_DRIVER_NAME;
+    pScrn->name = VMWARE_NAME;
+    pScrn->Probe = NULL;
+#ifdef BUILD_VMWGFX
+    vmwgfx_hookup(pScrn);
+#else
+    vmwlegacy_hookup(pScrn);
+#endif
+    pScrn->driverPrivate = pScrn->PreInit;
+    pScrn->PreInit = VMwarePreinitStub;
+
+    return TRUE;
+}
+#endif
+
 static void
 VMWAREIdentify(int flags)
 {
@@ -456,6 +497,10 @@ VMWareDriverFunc(ScrnInfoPtr pScrn,
 			      pScrn->yDpi / 2) / pScrn->yDpi;
       }
       return TRUE;
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,15,99,902,0)
+   case SUPPORTS_SERVER_FDS:
+      return TRUE;
+#endif
    default:
       return FALSE;
    }
@@ -481,6 +526,14 @@ _X_EXPORT DriverRec vmware = {
 #if XSERVER_LIBPCIACCESS
     VMwareDeviceMatch,
     VMwarePciProbe,
+#else
+    NULL,
+    NULL,
+#endif
+#ifdef XSERVER_PLATFORM_BUS
+    VMwarePlatformProbe,
+#else
+    NULL,
 #endif
 };
 
