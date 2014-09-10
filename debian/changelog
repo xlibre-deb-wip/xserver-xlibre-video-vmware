@@ -1,9 +1,9 @@
-xserver-xorg-video-vmware (1:13.0.2-3ubuntu1) UNRELEASED; urgency=low
+xserver-xorg-video-vmware (1:13.0.2-3ubuntu1) utopic; urgency=medium
 
   * Merge from released debian-unstable.
   * Cherry pick some more fixes from master.
 
- -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Wed, 06 Aug 2014 15:50:06 +0200
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Wed, 10 Sep 2014 16:32:01 +0200
 
 xserver-xorg-video-vmware (1:13.0.2-3) unstable; urgency=medium
 
