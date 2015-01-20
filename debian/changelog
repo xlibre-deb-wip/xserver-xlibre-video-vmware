@@ -1,8 +1,8 @@
-xserver-xorg-video-vmware (1:13.1.0-0ubuntu1) UNRELEASED; urgency=medium
+xserver-xorg-video-vmware (1:13.1.0-0ubuntu1) vivid; urgency=medium
 
   * Merge from unreleased debian.
 
- -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Tue, 20 Jan 2015 11:21:26 +0100
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Tue, 20 Jan 2015 13:14:27 +0100
 
 xserver-xorg-video-vmware (1:13.1.0-1) UNRELEASED; urgency=medium
 
