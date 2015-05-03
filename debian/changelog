@@ -8,6 +8,7 @@ xserver-xorg-video-vmware (1:13.1.0-1) UNRELEASED; urgency=medium
 
   [ Julien Cristau ]
   * Bump debhelper compat level to 9.
+  * Remove Drew and Cyril from Uploaders.
 
  -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Tue, 20 Jan 2015 11:21:26 +0100
 
