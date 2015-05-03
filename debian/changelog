@@ -1,4 +1,4 @@
-xserver-xorg-video-vmware (1:13.1.0-1) UNRELEASED; urgency=medium
+xserver-xorg-video-vmware (1:13.1.0-1) unstable; urgency=medium
 
   [ Maarten Lankhorst ]
   * New upstream release.
@@ -11,7 +11,7 @@ xserver-xorg-video-vmware (1:13.1.0-1) UNRELEASED; urgency=medium
   * Remove Drew and Cyril from Uploaders.
   * Let uscan verify tarball signatures.
 
- -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Tue, 20 Jan 2015 11:21:26 +0100
+ -- Julien Cristau <jcristau@debian.org>  Sun, 03 May 2015 11:33:26 +0200
 
 xserver-xorg-video-vmware (1:13.0.2-3) unstable; urgency=medium
 
