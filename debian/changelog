@@ -1,9 +1,13 @@
 xserver-xorg-video-vmware (1:13.1.0-1) UNRELEASED; urgency=medium
 
+  [ Maarten Lankhorst ]
   * New upstream release.
     + Don't add pixmaps to the pixmap list if they're already on it
       (closes: #765490)
   * Bump Standards-Version to 3.9.6 (no changes needed).
+
+  [ Julien Cristau ]
+  * Bump debhelper compat level to 9.
 
  -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Tue, 20 Jan 2015 11:21:26 +0100
 
