@@ -1,0 +1,27 @@
+From b1697434348799b0808a6c9e9a899394075b980c Mon Sep 17 00:00:00 2001
+From: Jakob Bornecrantz <jakob@vmware.com>
+Date: Thu, 14 Aug 2014 16:42:05 +0200
+Subject: vmware/legacy: Fix out of bound array indexing
+
+Spotted by coverity.
+
+Reported-by: Adam Jackson <ajax@redhat.com>
+Reviewed-by: Adam Jackson <ajax@redhat.com>
+Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+diff --git a/src/vmwarevideo.c b/src/vmwarevideo.c
+index 261e579..816f1ca 100644
+--- a/src/vmwarevideo.c
++++ b/src/vmwarevideo.c
+@@ -837,7 +837,7 @@ vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
+     cmdSetRegs.body.streamId = pVid->streamId;
+ 
+     items = cmdSetRegs.body.items;
+-    for (i = SVGA_VIDEO_ENABLED; i < SVGA_VIDEO_NUM_REGS; i++) {
++    for (i = SVGA_VIDEO_ENABLED; i < SVGA_VIDEO_DATA_GMRID; i++) {
+         items[i].regId = i;
+     }
+ 
+-- 
+cgit v0.10.2
+

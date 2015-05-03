@@ -1,0 +1,29 @@
+From 32562129750077a23f26f2e69adc8403eb24bf3f Mon Sep 17 00:00:00 2001
+From: Thomas Hellstrom <thellstrom@vmware.com>
+Date: Wed, 3 Sep 2014 07:08:41 -0700
+Subject: vmware/vmwgfx: Don't add pixmaps to the pixmap list if they're
+ already on it
+
+This could cause loops through the list to spin indefinitely.
+This would most likely occur at VT switches.
+
+Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+diff --git a/vmwgfx/vmwgfx_saa.c b/vmwgfx/vmwgfx_saa.c
+index b9204c6..bca3d93 100644
+--- a/vmwgfx/vmwgfx_saa.c
++++ b/vmwgfx/vmwgfx_saa.c
+@@ -694,7 +694,8 @@ vmwgfx_modify_pixmap_header (PixmapPtr pixmap, int w, int h, int depth,
+ 
+     vmwgfx_pix_resize(pixmap, old_pitch, old_height, old_width);
+     vmwgfx_pixmap_free_storage(vpix);
+-    WSBMLISTADDTAIL(&vpix->pixmap_list, &vsaa->pixmaps);
++    if (WSBMLISTEMPTY(&vpix->pixmap_list))
++	WSBMLISTADDTAIL(&vpix->pixmap_list, &vsaa->pixmaps);
+ 
+     return TRUE;
+ 
+-- 
+cgit v0.10.2
+

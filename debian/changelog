@@ -1,3 +1,14 @@
+xserver-xorg-video-vmware (1:13.0.2-3.1) unstable; urgency=medium
+
+  * Non-maintainer upload as requested by jcristau.
+  * Fixing resizing issues & xorg being stuck in a loop at logoff.
+    (Closes: #765490)
+    Patch 32562129750077a23f26f2e69adc8403eb24bf3f from upstream.
+  * Fixing an array out of bounds indexing, upstream
+    b1697434348799b0808a6c9e9a899394075b980c.
+
+ -- Bernd Zeimetz <bzed@debian.org>  Sat, 14 Mar 2015 22:57:20 +0100
+
 xserver-xorg-video-vmware (1:13.0.2-3) unstable; urgency=medium
 
   * rules: avoid mixing implicit and normal rules; make 4 doesn't like that
