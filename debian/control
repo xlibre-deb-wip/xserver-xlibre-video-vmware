@@ -24,7 +24,7 @@ Vcs-Git: git://git.debian.org/git/pkg-xorg/driver/xserver-xorg-video-vmware
 Vcs-Browser: http://git.debian.org/?p=pkg-xorg/driver/xserver-xorg-video-vmware.git
 
 Package: xserver-xorg-video-vmware
-Architecture: any
+Architecture: any-amd64 any-i386
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
