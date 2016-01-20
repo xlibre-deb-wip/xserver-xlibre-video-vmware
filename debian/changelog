@@ -1,3 +1,14 @@
+xserver-xorg-video-vmware (1:13.1.0-2ubuntu1) wily; urgency=medium
+
+  * Merge with Debian, remaining Ubuntu changes:
+  * debian/vmwgfx-fbdev.conf:
+  * debian/xserver-xorg-video-vmware.install:
+    - Install vmwgfx-fbdev.conf into /etc/modprobe.d/ to pass
+      enable_fbdev=1 to the vmwgfx module at load time fixing a crash on
+      suspend from inside of the guest in VMware hosts.
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Wed, 15 Jul 2015 10:27:56 +1200
+
 xserver-xorg-video-vmware (1:13.1.0-2) unstable; urgency=medium
 
   * Restrict architecture list to x86.
