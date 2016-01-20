@@ -1,3 +1,15 @@
+xserver-xorg-video-vmware (1:13.1.0-0ubuntu1build2) wily; urgency=medium
+
+  * Rebuild against the new X (LP: #1462021).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Fri, 05 Jun 2015 16:19:01 +0200
+
+xserver-xorg-video-vmware (1:13.1.0-0ubuntu1build1) vivid; urgency=medium
+
+  * Rebuild to pick up new Xserver dependencies
+
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Thu, 12 Mar 2015 07:59:37 +0000
+
 xserver-xorg-video-vmware (1:13.1.0-0ubuntu1) vivid; urgency=medium
 
   * Merge from unreleased debian.

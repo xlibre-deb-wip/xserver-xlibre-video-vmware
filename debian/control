@@ -9,7 +9,7 @@ Build-Depends:
  dh-autoreconf,
  quilt,
  pkg-config,
- xserver-xorg-dev (>= 2:1.9.4),
+ xserver-xorg-dev (>= 2:1.16.99.901),
  x11proto-core-dev,
  x11proto-fonts-dev,
  x11proto-randr-dev,
