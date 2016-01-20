@@ -1,3 +1,9 @@
+xserver-xorg-video-vmware (1:13.1.0-2) unstable; urgency=medium
+
+  * Restrict architecture list to x86.
+
+ -- Julien Cristau <jcristau@debian.org>  Sat, 09 May 2015 17:13:48 +0200
+
 xserver-xorg-video-vmware (1:13.1.0-0ubuntu1build2) wily; urgency=medium
 
   * Rebuild against the new X (LP: #1462021).
@@ -16,12 +22,20 @@ xserver-xorg-video-vmware (1:13.1.0-0ubuntu1) vivid; urgency=medium
 
  -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Tue, 20 Jan 2015 13:14:27 +0100
 
-xserver-xorg-video-vmware (1:13.1.0-1) UNRELEASED; urgency=medium
+xserver-xorg-video-vmware (1:13.1.0-1) unstable; urgency=medium
 
+  [ Maarten Lankhorst ]
   * New upstream release.
+    + Don't add pixmaps to the pixmap list if they're already on it
+      (closes: #765490)
   * Bump Standards-Version to 3.9.6 (no changes needed).
 
- -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Tue, 20 Jan 2015 11:21:26 +0100
+  [ Julien Cristau ]
+  * Bump debhelper compat level to 9.
+  * Remove Drew and Cyril from Uploaders.
+  * Let uscan verify tarball signatures.
+
+ -- Julien Cristau <jcristau@debian.org>  Sun, 03 May 2015 11:33:26 +0200
 
 xserver-xorg-video-vmware (1:13.0.2-3ubuntu1) utopic; urgency=medium
 

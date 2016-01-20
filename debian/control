@@ -3,13 +3,12 @@ Section: x11
 Priority: optional
 Maintainer: Ubuntu X-SWAT <ubuntu-x@lists.ubuntu.com>
 XSBC-Original-Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
-Uploaders: Drew Parsons <dparsons@debian.org>, Cyril Brulebois <kibi@debian.org>
 Build-Depends:
- debhelper (>= 8),
+ debhelper (>= 9),
  dh-autoreconf,
  quilt,
  pkg-config,
- xserver-xorg-dev (>= 2:1.16.99.901),
+ xserver-xorg-dev (>= 2:1.9.4),
  x11proto-core-dev,
  x11proto-fonts-dev,
  x11proto-randr-dev,
@@ -26,7 +25,7 @@ Vcs-Git: git://git.debian.org/git/pkg-xorg/driver/xserver-xorg-video-vmware
 Vcs-Browser: http://git.debian.org/?p=pkg-xorg/driver/xserver-xorg-video-vmware.git
 
 Package: xserver-xorg-video-vmware
-Architecture: amd64 armel armhf i386 powerpc
+Architecture: any-amd64 any-i386
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
