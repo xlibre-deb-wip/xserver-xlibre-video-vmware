@@ -16,6 +16,7 @@ Build-Depends:
  x11proto-xinerama-dev,
  xutils-dev (>= 1:7.5+4),
  libdrm-dev [!hurd-i386],
+ libudev-dev [linux-any],
  libxext-dev,
  libx11-dev,
  libxatracker-dev [linux-any],
