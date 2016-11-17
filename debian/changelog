@@ -1,6 +1,7 @@
 xserver-xorg-video-vmware (1:13.2.1-1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * Use https URLs in Vcs-* control fields.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Thu, 17 Nov 2016 13:59:45 +0200
 
