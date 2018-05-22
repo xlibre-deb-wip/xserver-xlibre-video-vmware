@@ -3,6 +3,7 @@ xserver-xorg-video-vmware (1:13.3.0-1) UNRELEASED; urgency=medium
   * New upstream release.
   * control: Update VCS urls to point to salsa.d.o.
   * Bump debhelper to 11.
+  * control: Bump policy to 4.1.4.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Tue, 22 May 2018 10:35:33 +0300
 
