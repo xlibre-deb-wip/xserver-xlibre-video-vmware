@@ -1,0 +1,42 @@
+Source: xserver-xorg-video-vmware
+Section: x11
+Priority: optional
+Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Build-Depends:
+ debhelper (>= 9),
+ dh-autoreconf,
+ quilt,
+ pkg-config,
+ xserver-xorg-dev (>= 2:1.9.4),
+ x11proto-core-dev,
+ x11proto-fonts-dev,
+ x11proto-randr-dev,
+ x11proto-render-dev,
+ x11proto-xext-dev,
+ x11proto-xinerama-dev,
+ xutils-dev (>= 1:7.5+4),
+ libdrm-dev [!hurd-i386],
+ libudev-dev [linux-any],
+ libxext-dev,
+ libx11-dev,
+ libxatracker-dev [linux-any],
+Standards-Version: 3.9.8
+Vcs-Git: https://anonscm.debian.org/git/pkg-xorg/driver/xserver-xorg-video-vmware.git
+Vcs-Browser: https://anonscm.debian.org/git/pkg-xorg/driver/xserver-xorg-video-vmware.git
+
+Package: xserver-xorg-video-vmware
+Architecture: any-amd64 any-i386
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ ${xviddriver:Depends},
+Provides:
+ ${xviddriver:Provides}
+Description: X.Org X server -- VMware display driver
+ This package provides the driver for VMware client sessions, i.e. if Linux
+ is running inside a VMware session.
+ .
+ More information about X.Org can be found at:
+ <URL:http://www.X.org>
+ .
+ This package is built from the X.org xf86-video-vmware driver module.
