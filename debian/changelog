@@ -1,11 +1,11 @@
-xserver-xorg-video-vmware (1:13.3.0-3) UNRELEASED; urgency=medium
+xserver-xorg-video-vmware (1:13.3.0-3) unstable; urgency=medium
 
   * control: Migrate to x11proto-dev.
   * control: Migrate to debhelper-compat, bump to 12.
   * control: Bump policy to 4.5.0.
   * watch: Update upstream git url.
 
- -- Timo Aaltonen <tjaalton@debian.org>  Tue, 14 Apr 2020 23:37:48 +0300
+ -- Timo Aaltonen <tjaalton@debian.org>  Tue, 14 Apr 2020 23:40:40 +0300
 
 xserver-xorg-video-vmware (1:13.3.0-2) unstable; urgency=medium
 
