@@ -1,6 +1,7 @@
 xserver-xorg-video-vmware (1:13.3.0-3) UNRELEASED; urgency=medium
 
   * control: Migrate to x11proto-dev.
+  * control: Migrate to debhelper-compat, bump to 12.
 
  -- Timo Aaltonen <tjaalton@debian.org>  Tue, 14 Apr 2020 23:37:48 +0300
 
