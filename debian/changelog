@@ -1,3 +1,9 @@
+xserver-xorg-video-vmware (1:13.3.0-3) UNRELEASED; urgency=medium
+
+  * control: Migrate to x11proto-dev.
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Tue, 14 Apr 2020 23:37:48 +0300
+
 xserver-xorg-video-vmware (1:13.3.0-2) unstable; urgency=medium
 
   * Upload to unstable. (Closes: #900095)
