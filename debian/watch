@@ -1,4 +1,4 @@
-#git=git://anongit.freedesktop.org/xorg/driver/xf86-video-vmware
+#git=https://gitlab.freedesktop.org/xorg/driver/xf86-video-vmware
 version=3
 opts=pgpsigurlmangle=s/$/.sig/ \
 https://xorg.freedesktop.org/releases/individual/driver/ xf86-video-vmware-(.*)\.tar\.gz
