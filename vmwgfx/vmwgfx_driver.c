@@ -650,26 +650,46 @@ drv_pre_init(ScrnInfoPtr pScrn, int flags)
 static Bool
 vmwgfx_scanout_update(int drm_fd, int fb_id, RegionPtr dirty)
 {
-    unsigned num_cliprects = REGION_NUM_RECTS(dirty);
-    drmModeClip *clip = alloca(num_cliprects * sizeof(drmModeClip));
-    BoxPtr rect = REGION_RECTS(dirty);
+    BoxPtr clips = REGION_RECTS(dirty);
+    unsigned int num_clips = REGION_NUM_RECTS(dirty);
+    unsigned int alloc_clips = min(num_clips, DRM_MODE_FB_DIRTY_MAX_CLIPS);
+    drmModeClip *rects, *r;
     int i, ret;
 
-    if (!num_cliprects)
+    if (num_clips == 0)
 	return TRUE;
 
-    for (i = 0; i < num_cliprects; i++, rect++) {
-	clip[i].x1 = rect->x1;
-	clip[i].y1 = rect->y1;
-	clip[i].x2 = rect->x2;
-	clip[i].y2 = rect->y2;
+    rects = malloc(alloc_clips * sizeof(*rects));
+    if (!rects) {
+	LogMessage(X_ERROR, "Failed to alloc cliprects for scanout update.\n");
+	return FALSE;
     }
 
-    ret = drmModeDirtyFB(drm_fd, fb_id, clip, num_cliprects);
-    if (ret)
-	LogMessage(X_ERROR, "%s: failed to send dirty (%i, %s)\n",
-		   __func__, ret, strerror(-ret));
-    return (ret == 0);
+    while (num_clips > 0) {
+	unsigned int cur_clips = min(num_clips, DRM_MODE_FB_DIRTY_MAX_CLIPS);
+
+	memset(rects, 0, alloc_clips * sizeof(*rects));
+
+	for (i = 0, r = rects; i < cur_clips; ++i, ++r, ++clips) {
+	    r->x1 = clips->x1;
+	    r->y1 = clips->y1;
+	    r->x2 = clips->x2;
+	    r->y2 = clips->y2;
+	}
+
+	ret = drmModeDirtyFB(drm_fd, fb_id, rects, cur_clips);
+	if (ret) {
+	    LogMessage(X_ERROR, "%s: failed to send dirty (%i, %s)\n",
+		       __func__, ret, strerror(-ret));
+	    return FALSE;
+	}
+
+	num_clips -= cur_clips;
+    }
+
+    free(rects);
+
+    return TRUE;
 }
 
 static Bool
@@ -1314,6 +1334,7 @@ drv_close_screen(CLOSE_SCREEN_ARGS_DECL)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     modesettingPtr ms = modesettingPTR(pScrn);
+    Bool ret;
 
     if (ms->cursor) {
        FreeCursor(ms->cursor, None);
@@ -1327,6 +1348,8 @@ drv_close_screen(CLOSE_SCREEN_ARGS_DECL)
         pScrn->LeaveVT(VT_FUNC_ARGS);
 
     vmwgfx_uevent_fini(pScrn, ms);
+    vmw_xv_close(pScreen);
+
     pScrn->vtSema = FALSE;
 
     vmwgfx_unwrap(ms, pScrn, EnterVT);
@@ -1337,10 +1360,12 @@ drv_close_screen(CLOSE_SCREEN_ARGS_DECL)
     vmwgfx_unwrap(ms, pScreen, BlockHandler);
     vmwgfx_unwrap(ms, pScreen, CreateScreenResources);
 
+    ret = (*pScreen->CloseScreen) (CLOSE_SCREEN_ARGS);
+    
     if (ms->xat)
 	xa_tracker_destroy(ms->xat);
 
-    return (*pScreen->CloseScreen) (CLOSE_SCREEN_ARGS);
+    return ret;
 }
 
 static ModeStatus

@@ -237,7 +237,7 @@ stop_video(ScrnInfoPtr pScrn, pointer data, Bool shutdown)
 
        for (i=0; i<3; ++i) {
 	   for (j=0; j<2; ++j) {
-	       if (priv->yuv[i]) {
+	       if (priv->yuv[j][i]) {
 		   xa_surface_destroy(priv->yuv[j][i]);
 		   priv->yuv[j][i] = NULL;
 	       }
@@ -634,9 +634,16 @@ copy_packed_data(ScrnInfoPtr pScrn,
       yp = buf + offsets[0];
       vp = buf + offsets[1];
       up = buf + offsets[2];
-      memcpy(ymap, yp, w*h);
-      memcpy(vmap, vp, w*h/4);
-      memcpy(umap, up, w*h/4);
+      for (i = 0; i < h; ++i) {
+          memcpy(ymap + w * i, yp, w);
+          yp += pitches[0];
+      }
+      for (i = 0; i < h / 2; ++i) {
+          memcpy(vmap + w * i / 2, vp, w / 2);
+          memcpy(umap + w * i / 2, up, w / 2);
+          vp += pitches[1];
+          up += pitches[2];
+      }
       break;
    }
    case FOURCC_UYVY:
@@ -904,15 +911,12 @@ port_priv_create(struct xa_tracker *xat, struct xa_context *r,
 }
 
 static void
-vmwgfx_free_textured_adaptor(XF86VideoAdaptorPtr adaptor, Bool free_ports)
+vmwgfx_free_textured_adaptor(XF86VideoAdaptorPtr adaptor)
 {
-    if (free_ports) {
-	int i;
+    int i;
 
-	for(i=0; i<adaptor->nPorts; ++i) {
-	    free(adaptor->pPortPrivates[i].ptr);
-	}
-    }
+    for (i = 0; i < adaptor->nPorts; ++i)
+	free(adaptor->pPortPrivates[i].ptr);
 
     free(adaptor->pAttributes);
     free(adaptor->pPortPrivates);
@@ -987,6 +991,23 @@ xorg_setup_textured_adapter(ScreenPtr pScreen)
 }
 
 void
+vmw_xv_close(ScreenPtr pScreen)
+{
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
+   modesettingPtr ms = modesettingPTR(pScrn);
+
+   if (ms->overlay) {
+       vmw_video_free_adaptor(ms->overlay);
+       ms->overlay = NULL;
+   }
+
+   if (ms->textured) {
+       vmwgfx_free_textured_adaptor(ms->textured);
+       ms->textured = NULL;
+   }
+}
+
+void
 xorg_xv_init(ScreenPtr pScreen)
 {
    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
@@ -1025,17 +1046,19 @@ xorg_xv_init(ScreenPtr pScreen)
        adaptors[num_adaptors++] = overlay_adaptor;
 
    if (num_adaptors) {
-       Bool ret;
-       ret = xf86XVScreenInit(pScreen, adaptors, num_adaptors);
-       if (textured_adapter)
-	   vmwgfx_free_textured_adaptor(textured_adapter, !ret);
-       if (overlay_adaptor)
-	   vmw_video_free_adaptor(overlay_adaptor, !ret);
-       if (!ret)
+       if (xf86XVScreenInit(pScreen, adaptors, num_adaptors)) {
+	   ms->overlay = overlay_adaptor;
+	   ms->textured = textured_adapter;
+       } else {
+	   ms->overlay = NULL;
+	   ms->textured = NULL;
 	   xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		      "Failed to initialize Xv.\n");
+       }
    } else {
        xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		  "Disabling Xv because no adaptors could be initialized.\n");
    }
+
+   free(new_adaptors);
 }
