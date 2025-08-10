@@ -28,13 +28,13 @@ Depends:
 Provides:
  xserver-xorg-video-vmware,
  ${xviddriver:Provides}
-Description: X.Org X server -- VMware display driver
+Description: XLibre X server -- VMware display driver
  This package provides the driver for VMware client sessions, i.e. if Linux
  is running inside a VMware session.
  .
- More information about X.Org can be found at:
- <URL:http://www.X.org>
+ More information about XLibre can be found at:
+ <URL:https://github.com/X11Libre/xserver>
  .
- This package is built from the X.org xf86-video-vmware driver module.
+ This package is built from the XLibre xf86-video-vmware driver module.
 Conflicts:
  xserver-xorg-video-vmware,
