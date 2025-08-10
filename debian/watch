@@ -1,4 +1,2 @@
-#git=https://gitlab.freedesktop.org/xorg/driver/xf86-video-vmware
-version=3
-opts=pgpsigurlmangle=s/$/.sig/ \
-https://xorg.freedesktop.org/releases/individual/driver/ xf86-video-vmware-(.*)\.tar\.gz
+version=4
+https://github.com/X11Libre/xf86-video-vmware/tags .*/xlibre-xf86-video-vmware-(.*)@ARCHIVE_EXT@
