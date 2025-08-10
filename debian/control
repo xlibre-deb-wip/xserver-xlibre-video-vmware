@@ -1,12 +1,12 @@
-Source: xserver-xorg-video-vmware
+Source: xserver-xlibre-video-vmware
 Section: x11
 Priority: optional
-Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
+Maintainer: apebl <a@pebl.cc>
 Build-Depends:
  debhelper-compat (= 12),
  quilt,
  pkg-config,
- xserver-xorg-dev (>= 2:1.9.4),
+ xserver-xlibre-dev (>= 2:1.9.4),
  x11proto-dev,
  xutils-dev (>= 1:7.5+4),
  libdrm-dev [!hurd-i386],
@@ -15,16 +15,18 @@ Build-Depends:
  libx11-dev,
  libxatracker-dev [linux-any],
 Standards-Version: 4.6.2
-Vcs-Git: https://salsa.debian.org/xorg-team/driver/xserver-xorg-video-vmware.git
-Vcs-Browser: https://salsa.debian.org/xorg-team/driver/xserver-xorg-video-vmware
+Vcs-Git: https://github.com/xlibre-deb/xserver-xlibre-video-vmware.git
+Vcs-Browser: https://github.com/xlibre-deb/xserver-xlibre-video-vmware
+Homepage: https://github.com/X11Libre
 
-Package: xserver-xorg-video-vmware
+Package: xserver-xlibre-video-vmware
 Architecture: any-amd64 any-i386
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
  ${xviddriver:Depends},
 Provides:
+ xserver-xorg-video-vmware,
  ${xviddriver:Provides}
 Description: X.Org X server -- VMware display driver
  This package provides the driver for VMware client sessions, i.e. if Linux
@@ -34,3 +36,5 @@ Description: X.Org X server -- VMware display driver
  <URL:http://www.X.org>
  .
  This package is built from the X.org xf86-video-vmware driver module.
+Conflicts:
+ xserver-xorg-video-vmware,
