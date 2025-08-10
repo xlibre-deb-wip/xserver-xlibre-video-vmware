@@ -24,7 +24,7 @@
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-vmware],
         [13.4.0],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-video-vmware/-/issues],
         [xf86-video-vmware])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -71,7 +71,7 @@ XORG_DRIVER_CHECK_EXT(XINERAMA, xineramaproto)
 XORG_DRIVER_CHECK_EXT(XV, videoproto)
 
 # Obtain compiler/linker options for the driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.1 xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.18 xproto fontsproto $REQUIRED_MODULES])
 PKG_CHECK_EXISTS([xorg-server >= 1.1.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_1_0], 1,
                  [Has version 1.1.0 or greater of the Xserver])])

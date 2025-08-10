@@ -43,45 +43,8 @@ char rcsId_vmware[] =
 #include <xf86_libc.h>
 #endif
 
-#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 5)
-
 #define xf86LoaderReqSymLists(...) do {} while (0)
 #define LoaderRefSymLists(...) do {} while (0)
-
-#else
-
-const char *vgahwSymbols[] = {
-    "vgaHWGetHWRec",
-    "vgaHWGetIOBase",
-    "vgaHWGetIndex",
-    "vgaHWInit",
-    "vgaHWProtect",
-    "vgaHWRestore",
-    "vgaHWSave",
-    "vgaHWSaveScreen",
-    "vgaHWUnlock",
-    NULL
-};
-
-static const char *fbSymbols[] = {
-    "fbCreateDefColormap",
-    "fbPictureInit",
-    "fbScreenInit",
-    NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
-static const char *shadowfbSymbols[] = {
-    "ShadowFBInit2",
-    NULL
-};
-#endif
 
 /* Table of default modes to always add to the mode list. */
 
@@ -110,7 +73,7 @@ VMWAREGetRec(ScrnInfoPtr pScrn)
     if (pScrn->driverPrivate != NULL) {
         return TRUE;
     }
-    pScrn->driverPrivate = xnfcalloc(sizeof(VMWARERec), 1);
+    pScrn->driverPrivate = XNFcallocarray(sizeof(VMWARERec), 1);
     /* FIXME: Initialize driverPrivate... */
     return TRUE;
 }
@@ -307,12 +270,6 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     uint32 width = 0, height = 0;
     Bool defaultMode;
 
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
-#ifndef BUILD_FOR_420
-    domainIOBase = pScrn->domainIOBase;
-#endif
-#endif
-
     if (flags & PROBE_DETECT) {
         return FALSE;
     }
@@ -341,7 +298,7 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
            SVGA_LEGACY_BASE_PORT + SVGA_VALUE_PORT*sizeof(uint32);
     } else {
         /* Note:  This setting of valueReg causes unaligned I/O */
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
         pVMWARE->portIOBase = pVMWARE->PciInfo->regions[0].base_addr;
 #else
         pVMWARE->portIOBase = pVMWARE->PciInfo->ioBase[0];
@@ -383,7 +340,7 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     }
     pVMWARE->suspensionSavedRegId = id;
 
-#if !XSERVER_LIBPCIACCESS
+#ifndef XSERVER_LIBPCIACCESS
     pVMWARE->PciTag = pciTag(pVMWARE->PciInfo->bus, pVMWARE->PciInfo->device,
                              pVMWARE->PciInfo->func);
 #endif
@@ -663,7 +620,7 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         return FALSE;
     }
 #endif
-    clockRanges = xnfcalloc(sizeof(ClockRange), 1);
+    clockRanges = XNFcallocarray(sizeof(ClockRange), 1);
     clockRanges->next = NULL;
     clockRanges->minClock = 1;
     clockRanges->maxClock = 400000000;
@@ -727,13 +684,11 @@ static Bool
 VMWAREMapMem(ScrnInfoPtr pScrn)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
     int err;
     struct pci_device *const device = pVMWARE->PciInfo;
     void *fbBase;
-#endif
 
-#if XSERVER_LIBPCIACCESS
    err = pci_device_map_range(device,
                               pVMWARE->memPhysBase,
                               pVMWARE->videoRam,
@@ -770,7 +725,7 @@ VMWAREUnmapMem(ScrnInfoPtr pScrn)
 
     VmwareLog(("Unmapped: %p/%u\n", pVMWARE->FbBase, pVMWARE->videoRam));
 
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
     pci_device_unmap_range(pVMWARE->PciInfo, pVMWARE->FbBase, pVMWARE->videoRam);
 #else
     xf86UnMapVidMem(pScrn->scrnIndex, pVMWARE->FbBase, pVMWARE->videoRam);
@@ -1045,7 +1000,7 @@ static void
 VMWAREInitFIFO(ScrnInfoPtr pScrn)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
     struct pci_device *const device = pVMWARE->PciInfo;
     int err;
     void *mmioVirtBase;
@@ -1058,7 +1013,7 @@ VMWAREInitFIFO(ScrnInfoPtr pScrn)
 
     pVMWARE->mmioPhysBase = vmwareReadReg(pVMWARE, SVGA_REG_MEM_START);
     pVMWARE->mmioSize = vmwareReadReg(pVMWARE, SVGA_REG_MEM_SIZE) & ~3;
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
     err = pci_device_map_range(device, pVMWARE->mmioPhysBase,
                                pVMWARE->mmioSize,
                                PCI_DEV_MAP_FLAG_WRITABLE,
@@ -1099,7 +1054,7 @@ VMWAREStopFIFO(ScrnInfoPtr pScrn)
     TRACEPOINT
 
     vmwareWriteReg(pVMWARE, SVGA_REG_CONFIG_DONE, 0);
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
     pci_device_unmap_range(pVMWARE->PciInfo, pVMWARE->mmioVirtBase, pVMWARE->mmioSize);
 #else
     xf86UnMapVidMem(pScrn->scrnIndex, pVMWARE->mmioVirtBase, pVMWARE->mmioSize);
@@ -1345,7 +1300,7 @@ VMWAREScreenInit(SCREEN_INIT_ARGS_DECL)
 
 
     if (useXinerama && xf86IsOptionSet(options, OPTION_GUI_LAYOUT)) {
-       CONST_ABI_18_0 char *topology = xf86GetOptValString(options, OPTION_GUI_LAYOUT);
+       const char *topology = xf86GetOptValString(options, OPTION_GUI_LAYOUT);
        if (topology) {
           pVMWARE->xineramaState =
              VMWAREParseTopologyString(pScrn, topology,
@@ -1357,7 +1312,7 @@ VMWAREScreenInit(SCREEN_INIT_ARGS_DECL)
        }
     } else if (useXinerama &&
 	       xf86IsOptionSet(options, OPTION_STATIC_XINERAMA)) {
-       CONST_ABI_18_0 char *topology = xf86GetOptValString(options, OPTION_STATIC_XINERAMA);
+       const char *topology = xf86GetOptValString(options, OPTION_STATIC_XINERAMA);
        if (topology) {
           pVMWARE->xineramaState =
              VMWAREParseTopologyString(pScrn, topology,

@@ -43,14 +43,6 @@
 #include "vmware_bootstrap.h"
 #include <xf86Module.h>
 
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
-#define _swapl(x, n) swapl(x,n)
-#define _swaps(x, n) swaps(x,n)
-#else
-#define _swapl(x, n) (void) n; swapl(x)
-#define _swaps(x, n) (void) n; swaps(x)
-#endif
-
 /*
  * The virtual hardware's cursor limits are pretty big. Some VMware
  * product versions limit to 1024x1024 pixels, others limit to 128
@@ -83,7 +75,7 @@ typedef xXineramaScreenInfo VMWAREXineramaRec, *VMWAREXineramaPtr;
 
 typedef struct {
     EntityInfoPtr pEnt;
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
     struct pci_device *PciInfo;
 #else
     pciVideoPtr PciInfo;
@@ -207,7 +199,7 @@ typedef struct {
 /* Undefine this to kill all acceleration */
 #define ACCELERATE_OPS
 
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
 #define VENDOR_ID(p)      (p)->vendor_id
 #define DEVICE_ID(p)      (p)->device_id
 #define SUBVENDOR_ID(p)   (p)->subvendor_id
