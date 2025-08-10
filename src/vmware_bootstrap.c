@@ -36,10 +36,6 @@
 #include "vmware_bootstrap.h"
 #include <stdint.h>
 
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
-#include "xf86Resources.h"
-#endif
-
 #ifndef XSERVER_LIBPCIACCESS
 #include "vm_basic_types.h"
 #include "svga_reg.h"
@@ -61,19 +57,6 @@
 #endif
 
 /*
- * So that the file compiles unmodified when dropped in to a < 6.9 source tree.
- */
-#ifndef _X_EXPORT
-#define _X_EXPORT
-#endif
-/*
- * So that the file compiles unmodified when dropped into an xfree source tree.
- */
-#ifndef XORG_VERSION_CURRENT
-#define XORG_VERSION_CURRENT XF86_VERSION_CURRENT
-#endif
-
-/*
  * This is the only way I know to turn a #define of an integer constant into
  * a constant string.
  */
@@ -91,7 +74,7 @@ static char vmware_driver_name[] = VMWARE_DRIVER_NAME;
     VMW_STRING(PACKAGE_VERSION_MAJOR) "." VMW_STRING(PACKAGE_VERSION_MINOR) \
     "." VMW_STRING(PACKAGE_VERSION_PATCHLEVEL)
 
-#if !XSERVER_LIBPCIACCESS
+#ifndef XSERVER_LIBPCIACCESS
 static const char VMWAREBuildStr[] = "VMware Guest X Server "
     VMWARE_DRIVER_VERSION_STRING " - build=$Name$\n";
 #else
@@ -127,7 +110,7 @@ static resRange vmwareLegacyRes[] = {
 #define vmwareLegacyRes NULL
 #endif
 
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
 #define VENDOR_ID(p)      (p)->vendor_id
 #define DEVICE_ID(p)      (p)->device_id
 #define SUBVENDOR_ID(p)   (p)->subvendor_id
@@ -141,7 +124,7 @@ static resRange vmwareLegacyRes[] = {
 #define CHIP_REVISION(p)  (p)->chipRev
 #endif
 
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
 
 #define VMWARE_DEVICE_MATCH(d, i) \
     {PCI_VENDOR_ID_VMWARE, (d), PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, (i) }
@@ -220,7 +203,7 @@ vmwgfx_hosted_detect(void);
 static Bool
 VMwarePreinitStub(ScrnInfoPtr pScrn, int flags)
 {
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
     struct pci_device *pciInfo;
 #else
     pciVideoPtr pciInfo;
@@ -270,7 +253,7 @@ VMwarePreinitStub(ScrnInfoPtr pScrn, int flags)
     return (*pScrn->PreInit)(pScrn, flags);
 };
 
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
 static Bool
 VMwarePciProbe (DriverPtr           drv,
                 int                 entity_num,
@@ -505,10 +488,8 @@ VMWareDriverFunc(ScrnInfoPtr pScrn,
 			      pScrn->yDpi / 2) / pScrn->yDpi;
       }
       return TRUE;
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 18
    case SUPPORTS_SERVER_FDS:
       return TRUE;
-#endif
    default:
       return FALSE;
    }
@@ -520,7 +501,7 @@ _X_EXPORT DriverRec vmware = {
     VMWARE_DRIVER_VERSION,
     vmware_driver_name,
     VMWAREIdentify,
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
     NULL,
 #else
     VMWAREProbe,
@@ -531,21 +512,17 @@ _X_EXPORT DriverRec vmware = {
 #if VMWARE_DRIVER_FUNC
     VMWareDriverFunc,
 #endif
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 4
-#if XSERVER_LIBPCIACCESS
+#ifdef XSERVER_LIBPCIACCESS
     VMwareDeviceMatch,
     VMwarePciProbe,
 #else
     NULL,
     NULL,
 #endif
-#endif
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 13
 #ifdef XSERVER_PLATFORM_BUS
     VMwarePlatformProbe,
 #else
     NULL,
-#endif
 #endif
 };
 

@@ -160,7 +160,7 @@ drv_get_rec(ScrnInfoPtr pScrn)
     if (pScrn->driverPrivate)
 	return TRUE;
 
-    pScrn->driverPrivate = xnfcalloc(1, sizeof(modesettingRec));
+    pScrn->driverPrivate = XNFcallocarray(1, sizeof(modesettingRec));
 
     return TRUE;
 }
@@ -412,7 +412,7 @@ vmwgfx_pre_init_mode(ScrnInfoPtr pScrn, int flags)
     }
 
     if (xf86IsOptionSet(ms->Options, OPTION_GUI_LAYOUT)) {
-	CONST_ABI_18_0 char *topology =
+	const char *topology =
 	    xf86GetOptValString(ms->Options, OPTION_GUI_LAYOUT);
 
 	ret = FALSE;
@@ -422,7 +422,7 @@ vmwgfx_pre_init_mode(ScrnInfoPtr pScrn, int flags)
 	}
 
     } else if (xf86IsOptionSet(ms->Options, OPTION_STATIC_XINERAMA)) {
-	CONST_ABI_18_0 char *topology =
+	const char *topology =
 	    xf86GetOptValString(ms->Options, OPTION_STATIC_XINERAMA);
 
 	ret = FALSE;
