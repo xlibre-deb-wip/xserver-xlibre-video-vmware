@@ -5,7 +5,7 @@ Maintainer: apebl <a@pebl.cc>
 Build-Depends:
  debhelper-compat (= 12),
  quilt,
- pkg-config,
+ pkgconf,
  xserver-xlibre-dev (>= 2:1.9.4),
  x11proto-dev,
  xutils-dev (>= 1:7.5+4),
