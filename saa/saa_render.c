@@ -54,9 +54,9 @@ saa_create_alpha_picture(ScreenPtr pScreen,
 
     if (!pPictFormat) {
 	if (pDst->polyEdge == PolyEdgeSharp)
-	    pPictFormat = PictureMatchFormat(pScreen, 1, PICT_a1);
+	    pPictFormat = PictureMatchFormat(pScreen, 1, PIXMAN_a1);
 	else
-	    pPictFormat = PictureMatchFormat(pScreen, 8, PICT_a8);
+	    pPictFormat = PictureMatchFormat(pScreen, 8, PIXMAN_a8);
 	if (!pPictFormat)
 	    return 0;
     }
@@ -138,9 +138,9 @@ saa_trapezoids(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
 	FreePicture(pPicture, 0);
     } else {
 	if (pDst->polyEdge == PolyEdgeSharp)
-	    maskFormat = PictureMatchFormat(pScreen, 1, PICT_a1);
+	    maskFormat = PictureMatchFormat(pScreen, 1, PIXMAN_a1);
 	else
-	    maskFormat = PictureMatchFormat(pScreen, 8, PICT_a8);
+	    maskFormat = PictureMatchFormat(pScreen, 8, PIXMAN_a8);
 	for (; ntrap; ntrap--, traps++)
 	    saa_trapezoids(op, pSrc, pDst, maskFormat, xSrc, ySrc, 1, traps);
     }
@@ -198,9 +198,9 @@ saa_triangles(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
 	FreePicture(pPicture, 0);
     } else {
 	if (pDst->polyEdge == PolyEdgeSharp)
-	    maskFormat = PictureMatchFormat(pScreen, 1, PICT_a1);
+	    maskFormat = PictureMatchFormat(pScreen, 1, PIXMAN_a1);
 	else
-	    maskFormat = PictureMatchFormat(pScreen, 8, PICT_a8);
+	    maskFormat = PictureMatchFormat(pScreen, 8, PIXMAN_a8);
 
 	for (; ntri; ntri--, tris++)
 	    saa_triangles(op, pSrc, pDst, maskFormat, xSrc, ySrc, 1, tris);
@@ -312,7 +312,7 @@ saa_copy_composite(CARD8 op,
 	return FALSE;
 
     if (op == PictOpSrc ||
-	(op == PictOpOver && PICT_FORMAT_A(pSrc->format) == 0 &&
+	(op == PictOpOver && PIXMAN_FORMAT_A(pSrc->format) == 0 &&
 	 pMask == NULL)) {
 
 	int xoff, yoff;

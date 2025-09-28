@@ -33,11 +33,11 @@
 
 
 static const enum xa_surface_type vmwgfx_stype_map[] = {
-  [PICT_TYPE_OTHER] = xa_type_other,
-  [PICT_TYPE_A] = xa_type_a,
-  [PICT_TYPE_ARGB] = xa_type_argb,
-  [PICT_TYPE_ABGR] = xa_type_abgr,
-  [PICT_TYPE_BGRA] = xa_type_bgra
+  [PIXMAN_TYPE_OTHER] = xa_type_other,
+  [PIXMAN_TYPE_A] = xa_type_a,
+  [PIXMAN_TYPE_ARGB] = xa_type_argb,
+  [PIXMAN_TYPE_ABGR] = xa_type_abgr,
+  [PIXMAN_TYPE_BGRA] = xa_type_bgra
 };
 
 static const unsigned int vmwgfx_stype_map_size =
@@ -93,22 +93,21 @@ vmwgfx_xa_surface_redefine(struct vmwgfx_saa_pixmap *vpix,
 /*
  * Create an xa format from a PICT format.
  */
-enum xa_formats
-vmwgfx_xa_format(enum _PictFormatShort format)
+enum xa_formats vmwgfx_xa_format(pixman_format_code_t format)
 {
-    uint32_t ptype = PICT_FORMAT_TYPE(format);
+    uint32_t ptype = PIXMAN_FORMAT_TYPE(format);
 
     if (ptype >= vmwgfx_stype_map_size ||
 	vmwgfx_stype_map[ptype] == 0 ||
 	vmwgfx_stype_map[ptype] == xa_type_other)
 	return xa_format_unknown;
 
-    return xa_format(PICT_FORMAT_BPP(format),
+    return xa_format(PIXMAN_FORMAT_BPP(format),
 		     vmwgfx_stype_map[ptype],
-		     PICT_FORMAT_A(format),
-		     PICT_FORMAT_R(format),
-		     PICT_FORMAT_G(format),
-		     PICT_FORMAT_B(format));
+		     PIXMAN_FORMAT_A(format),
+		     PIXMAN_FORMAT_R(format),
+		     PIXMAN_FORMAT_G(format),
+		     PIXMAN_FORMAT_B(format));
 }
 
 /*
@@ -167,9 +166,7 @@ vmwgfx_old_format_compatible(enum xa_formats format,
 /*
  * Choose format and flags for a composite dst surface.
  */
-Bool
-vmwgfx_hw_composite_dst_stage(PixmapPtr pixmap,
-			      enum _PictFormatShort pict_format)
+Bool vmwgfx_hw_composite_dst_stage(PixmapPtr pixmap, pixman_format_code_t pict_format)
 {
     struct vmwgfx_saa *vsaa =
 	to_vmwgfx_saa(saa_get_driver(pixmap->drawable.pScreen));
@@ -202,9 +199,7 @@ vmwgfx_hw_composite_dst_stage(PixmapPtr pixmap,
 /*
  * Choose format and flags for a composite src surface.
  */
-Bool
-vmwgfx_hw_composite_src_stage(PixmapPtr pixmap,
-			      enum _PictFormatShort pict_format)
+Bool vmwgfx_hw_composite_src_stage(PixmapPtr pixmap, pixman_format_code_t pict_format)
 {
     struct vmwgfx_saa *vsaa =
 	to_vmwgfx_saa(saa_get_driver(pixmap->drawable.pScreen));
